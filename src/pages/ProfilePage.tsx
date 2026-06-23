@@ -1,18 +1,41 @@
 import { useState } from 'react';
-import { Flame, BookCheck, GraduationCap, LogOut, Pencil, Check } from 'lucide-react';
+import {
+  Flame,
+  BookCheck,
+  GraduationCap,
+  LogOut,
+  Pencil,
+  Check,
+  Sun,
+  Moon,
+  RotateCcw,
+  Trash2,
+  AlertTriangle,
+} from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 import { useStreak } from '../hooks/useStreak';
 import { useCourseProgress } from '../hooks/useProgress';
-import { updateDisplayName } from '../data/progressService';
+import { useTheme } from '../hooks/useTheme';
+import {
+  updateDisplayName,
+  resetCourseProgress,
+} from '../data/progressService';
+import { getCourse } from '../content';
 import { resolveDisplayName } from '../lib/name';
 import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { cn } from '../lib/cn';
+import type { Theme } from '../lib/theme';
+
+const RESTARTABLE_COURSE_ID = 'dynamic-programming';
 
 export function ProfilePage() {
-  const { user, profile, logout } = useAuth();
+  const { user, profile, logout, deleteAccount } = useAuth();
   const streak = useStreak();
-  const { progress } = useCourseProgress('dynamic-programming');
+  const { progress } = useCourseProgress(RESTARTABLE_COURSE_ID);
+  const { theme, setTheme } = useTheme();
+
+  const course = getCourse(RESTARTABLE_COURSE_ID);
 
   const personName = resolveDisplayName({
     displayName: profile?.displayName,
@@ -22,15 +45,60 @@ export function ProfilePage() {
   const [editing, setEditing] = useState(false);
   const [name, setName] = useState(personName);
 
+  const [confirmRestart, setConfirmRestart] = useState(false);
+  const [restarting, setRestarting] = useState(false);
+
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
+
   const coursesInProgress =
     progress && progress.percentComplete > 0 && progress.percentComplete < 100
       ? 1
       : 0;
+  const hasCourseProgress = (progress?.percentComplete ?? 0) > 0;
 
   const saveName = async () => {
     if (user && name.trim()) await updateDisplayName(user.uid, name.trim());
     setEditing(false);
   };
+
+  const restartCourse = async () => {
+    if (!user) return;
+    setRestarting(true);
+    try {
+      await resetCourseProgress(user.uid, RESTARTABLE_COURSE_ID);
+      setConfirmRestart(false);
+    } finally {
+      setRestarting(false);
+    }
+  };
+
+  const deleteProfile = async () => {
+    setDeleting(true);
+    setDeleteError(null);
+    try {
+      // On success the auth listener clears the session and the protected
+      // route redirects to /auth, so there's nothing to do here afterwards.
+      await deleteAccount();
+    } catch (err) {
+      const code =
+        err && typeof err === 'object' && 'code' in err
+          ? String((err as { code: unknown }).code)
+          : '';
+      setDeleteError(
+        code === 'auth/requires-recent-login'
+          ? 'For your security, please sign out and sign back in, then try deleting again.'
+          : 'Something went wrong deleting your account. Please try again.',
+      );
+      setDeleting(false);
+    }
+  };
+
+  const themeOptions: { value: Theme; label: string; icon: typeof Sun }[] = [
+    { value: 'light', label: 'Light', icon: Sun },
+    { value: 'dark', label: 'Dark', icon: Moon },
+  ];
 
   const stats = [
     { label: 'Day streak', value: streak, icon: Flame, tint: 'text-flame' },
@@ -133,6 +201,139 @@ export function ProfilePage() {
             </div>
           ))}
         </div>
+      </Card>
+
+      {/* Appearance */}
+      <Card className="p-6">
+        <h2 className="mb-4 text-sm font-semibold uppercase tracking-wide text-muted">
+          Appearance
+        </h2>
+        <div className="flex items-center justify-between gap-4">
+          <div className="min-w-0">
+            <p className="text-sm font-semibold text-ink">Theme</p>
+            <p className="text-sm text-muted">
+              Choose how DPrilliant looks on this device.
+            </p>
+          </div>
+          <div
+            role="radiogroup"
+            aria-label="Theme"
+            className="flex shrink-0 rounded-full bg-canvas p-1"
+          >
+            {themeOptions.map(({ value, label, icon: Icon }) => {
+              const active = theme === value;
+              return (
+                <button
+                  key={value}
+                  type="button"
+                  role="radio"
+                  aria-checked={active}
+                  onClick={() => setTheme(value)}
+                  className={cn(
+                    'flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-sm font-semibold transition-colors',
+                    active
+                      ? 'bg-surface text-ink shadow-[var(--shadow-card)]'
+                      : 'text-muted hover:text-ink',
+                  )}
+                >
+                  <Icon className="h-4 w-4" aria-hidden="true" />
+                  {label}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      </Card>
+
+      {/* Course progress */}
+      {course && (
+        <Card className="p-6">
+          <h2 className="mb-4 text-sm font-semibold uppercase tracking-wide text-muted">
+            Course progress
+          </h2>
+          <div className="flex items-center justify-between gap-4">
+            <div className="min-w-0">
+              <p className="text-sm font-semibold text-ink">{course.title}</p>
+              <p className="text-sm text-muted">
+                {hasCourseProgress
+                  ? `You're ${progress?.percentComplete ?? 0}% through. Restart to clear your progress and take it from the top.`
+                  : "You haven't started this course yet."}
+              </p>
+            </div>
+            {confirmRestart ? (
+              <div className="flex shrink-0 items-center gap-2">
+                <Button
+                  variant="secondary"
+                  onClick={() => setConfirmRestart(false)}
+                  disabled={restarting}
+                >
+                  Cancel
+                </Button>
+                <Button onClick={() => void restartCourse()} disabled={restarting}>
+                  <RotateCcw className="h-4 w-4" aria-hidden="true" />
+                  {restarting ? 'Restarting…' : 'Confirm restart'}
+                </Button>
+              </div>
+            ) : (
+              <Button
+                variant="secondary"
+                className="shrink-0"
+                onClick={() => setConfirmRestart(true)}
+                disabled={!hasCourseProgress}
+              >
+                <RotateCcw className="h-4 w-4" aria-hidden="true" />
+                Restart course
+              </Button>
+            )}
+          </div>
+        </Card>
+      )}
+
+      {/* Danger zone */}
+      <Card className="border-wrong/30 p-6">
+        <h2 className="mb-1 flex items-center gap-2 text-sm font-semibold uppercase tracking-wide text-wrong">
+          <AlertTriangle className="h-4 w-4" aria-hidden="true" />
+          Danger zone
+        </h2>
+        <p className="mb-4 text-sm text-muted">
+          Deleting your profile permanently removes your account and all of your
+          learning progress. This cannot be undone.
+        </p>
+        {deleteError && (
+          <p className="mb-4 text-sm font-medium text-wrong" role="alert">
+            {deleteError}
+          </p>
+        )}
+        {confirmDelete ? (
+          <div className="flex flex-wrap items-center gap-2">
+            <Button
+              variant="secondary"
+              onClick={() => {
+                setConfirmDelete(false);
+                setDeleteError(null);
+              }}
+              disabled={deleting}
+            >
+              Cancel
+            </Button>
+            <Button
+              className="bg-wrong text-white hover:bg-wrong/90"
+              onClick={() => void deleteProfile()}
+              disabled={deleting}
+            >
+              <Trash2 className="h-4 w-4" aria-hidden="true" />
+              {deleting ? 'Deleting…' : 'Yes, delete my profile'}
+            </Button>
+          </div>
+        ) : (
+          <Button
+            className="bg-wrong text-white hover:bg-wrong/90"
+            onClick={() => setConfirmDelete(true)}
+          >
+            <Trash2 className="h-4 w-4" aria-hidden="true" />
+            Delete profile
+          </Button>
+        )}
       </Card>
     </div>
   );

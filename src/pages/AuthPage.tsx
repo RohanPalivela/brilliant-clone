@@ -65,7 +65,7 @@ export function AuthPage() {
   };
 
   const inputClass =
-    'h-12 w-full rounded-xl border border-line bg-white px-4 text-sm outline-none focus:border-brand focus:ring-2 focus:ring-brand/20';
+    'h-12 w-full rounded-xl border border-line bg-surface px-4 text-sm outline-none focus:border-brand focus:ring-2 focus:ring-brand/20';
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-canvas px-4 py-10">

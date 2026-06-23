@@ -7,6 +7,7 @@ import {
   serverTimestamp,
   collection,
   getDocs,
+  writeBatch,
 } from 'firebase/firestore';
 import type { User } from 'firebase/auth';
 import { db } from '../lib/firebase';
@@ -73,6 +74,60 @@ export async function updateDisplayName(
   displayName: string,
 ): Promise<void> {
   await updateDoc(userRef(uid), { displayName });
+}
+
+/**
+ * Wipe every learning document for a user: their profile, all course progress,
+ * and all lesson progress. Used before deleting the Auth account so we never
+ * leave orphaned data behind. Firestore has no recursive delete on the client,
+ * so we enumerate the subcollections and batch the deletes.
+ */
+export async function deleteUserData(uid: string): Promise<void> {
+  const [courseSnaps, lessonSnaps] = await Promise.all([
+    getDocs(collection(db, 'users', uid, 'courseProgress')),
+    getDocs(collection(db, 'users', uid, 'lessonProgress')),
+  ]);
+
+  const batch = writeBatch(db);
+  courseSnaps.forEach((s) => batch.delete(s.ref));
+  lessonSnaps.forEach((s) => batch.delete(s.ref));
+  batch.delete(userRef(uid));
+  await batch.commit();
+}
+
+/**
+ * Reset a single course back to its untouched state so the learner can take it
+ * again: drop the course-progress doc and every lesson-progress doc that
+ * belongs to it. The user's lifetime lesson total is rolled back by the number
+ * of lessons that were completed in this course, keeping profile stats honest.
+ */
+export async function resetCourseProgress(
+  uid: string,
+  courseId: string,
+): Promise<void> {
+  const [cp, lessonSnaps, profile] = await Promise.all([
+    getCourseProgress(uid, courseId),
+    getDocs(collection(db, 'users', uid, 'lessonProgress')),
+    getUserProfile(uid),
+  ]);
+
+  const batch = writeBatch(db);
+  lessonSnaps.forEach((s) => {
+    if ((s.data() as LessonProgress).courseId === courseId) batch.delete(s.ref);
+  });
+  batch.delete(courseProgressRef(uid, courseId));
+
+  const completedInCourse = cp?.completedLessonIds.length ?? 0;
+  if (profile && completedInCourse > 0) {
+    batch.update(userRef(uid), {
+      totalLessonsCompleted: Math.max(
+        0,
+        profile.totalLessonsCompleted - completedInCourse,
+      ),
+    });
+  }
+
+  await batch.commit();
 }
 
 // ---------------------------------------------------------------------------

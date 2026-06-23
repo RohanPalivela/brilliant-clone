@@ -32,7 +32,7 @@ interface ReachabilityCellsProps {
 }
 
 const markStyles: Record<CellMark, string> = {
-  empty: 'bg-white border-line text-muted',
+  empty: 'bg-surface border-line text-muted',
   check: 'bg-correct-soft border-correct text-correct',
   cross: 'bg-wrong-soft border-wrong text-wrong',
 };

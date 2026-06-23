@@ -15,6 +15,8 @@ export type ComponentType =
   | 'RangeSelector'
   | 'MultipleChoice'
   | 'CodeBlanks'
+  | 'KnapsackPicker'
+  | 'DPTable'
   | 'RichText';
 
 export type CellMark = 'empty' | 'check' | 'cross';
@@ -126,12 +128,57 @@ export interface RichTextProps {
   visual?: RichTextVisual;
 }
 
+/** A loot item for the 0/1 knapsack widget. */
+export interface KnapsackItem {
+  id: string;
+  label: string;
+  weight: number;
+  value: number;
+}
+
+export interface KnapsackPickerProps {
+  items: KnapsackItem[];
+  /** Weight budget. The bag can never exceed this. */
+  capacity: number;
+  prompt?: string;
+  /** Reveal the best achievable value as a target line (explore mode). */
+  showOptimal?: boolean;
+}
+
+/**
+ * Animated "watch the algorithm run" table. Read-only: it fills bottom-up so
+ * learners see the recurrence execute. Three flavors share one widget.
+ */
+export type DPTableProps =
+  | {
+      mode: 'reachability';
+      steps: number;
+      jumpSizes: number[];
+      prompt?: string;
+      caption?: string;
+    }
+  | {
+      mode: 'coins';
+      coins: number[];
+      amount: number;
+      prompt?: string;
+      caption?: string;
+    }
+  | {
+      mode: 'knapsack';
+      items: KnapsackItem[];
+      capacity: number;
+      prompt?: string;
+      caption?: string;
+    };
+
 export type Validation =
   | { type: 'none' }
   | { type: 'reachability'; jumpSizes: number[]; steps: number; target?: number }
   | { type: 'multipleChoice'; correctIds: string[] }
   | { type: 'range'; correctIndices: number[] }
-  | { type: 'codeBlanks'; correct: Record<string, string> };
+  | { type: 'codeBlanks'; correct: Record<string, string> }
+  | { type: 'knapsack'; capacity: number; items: KnapsackItem[] };
 
 interface BaseSlide {
   id: string;

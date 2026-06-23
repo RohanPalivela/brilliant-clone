@@ -10,6 +10,8 @@ export interface AuthState {
   signIn: (email: string, password: string) => Promise<void>;
   signInWithGoogle: () => Promise<void>;
   logout: () => Promise<void>;
+  /** Permanently delete the user's Firestore data and Firebase Auth account. */
+  deleteAccount: () => Promise<void>;
 }
 
 export const AuthContext = createContext<AuthState | null>(null);

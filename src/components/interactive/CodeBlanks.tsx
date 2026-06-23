@@ -126,7 +126,7 @@ export function CodeBlanks({
                 'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand',
                 used
                   ? 'cursor-default border-line bg-canvas text-muted opacity-40'
-                  : 'cursor-grab border-line bg-white text-ink hover:border-brand active:cursor-grabbing',
+                  : 'cursor-grab border-line bg-surface text-ink hover:border-brand active:cursor-grabbing',
                 isSelected && 'border-brand bg-brand-soft ring-2 ring-brand',
               )}
             >

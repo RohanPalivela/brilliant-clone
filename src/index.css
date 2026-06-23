@@ -1,5 +1,8 @@
 @import 'tailwindcss';
 
+/* Enable class-based dark mode (toggled via `.dark` on <html>) */
+@custom-variant dark (&:where(.dark, .dark *));
+
 /* Brilliant-style design tokens */
 @theme {
   --color-ink: #08060d;
@@ -27,6 +30,35 @@
   --font-sans: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
 }
 
+/*
+ * Dark theme: re-maps the semantic design tokens only. Because every component
+ * styles itself with these tokens (text-ink, bg-canvas, bg-surface, …), the
+ * whole app re-themes from this one block — no per-component changes needed.
+ */
+.dark {
+  --color-ink: #f5f6f8;
+  --color-ink-soft: #c2c8d2;
+  --color-muted: #8b93a3;
+  --color-surface: #16181f;
+  --color-canvas: #0c0e13;
+  --color-line: #272b35;
+
+  --color-brand: #8b93f8;
+  --color-brand-soft: #20204a;
+
+  --color-correct: #34d399;
+  --color-correct-soft: #07301f;
+  --color-wrong: #f87171;
+  --color-wrong-soft: #3a1212;
+  --color-flame: #fb923c;
+
+  /* Primary CTA blends into a near-black surface, so lift it to brand indigo. */
+  --color-cta: #5b54e6;
+  --color-cta-hover: #6f68ef;
+
+  --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.5), 0 8px 24px -12px rgba(0, 0, 0, 0.7);
+}
+
 html,
 body,
 #root {
@@ -40,6 +72,17 @@ body {
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
+}
+
+/* Gentle cross-fade when switching themes (skipped for reduced-motion below) */
+body,
+.bg-surface,
+.bg-canvas,
+.border-line {
+  transition:
+    background-color 0.2s ease,
+    border-color 0.2s ease,
+    color 0.2s ease;
 }
 
 /* Confetti + celebration animations (respect reduced motion) */

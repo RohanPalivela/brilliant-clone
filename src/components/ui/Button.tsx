@@ -14,7 +14,7 @@ const variants: Record<Variant, string> = {
   primary:
     'bg-cta text-white hover:bg-cta-hover disabled:bg-line disabled:text-muted',
   secondary:
-    'bg-white text-ink border border-line hover:bg-canvas disabled:text-muted',
+    'bg-surface text-ink border border-line hover:bg-canvas disabled:text-muted',
   ghost: 'bg-transparent text-ink-soft hover:bg-canvas',
 };
 

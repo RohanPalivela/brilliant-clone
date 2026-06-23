@@ -57,7 +57,7 @@ export function MultipleChoice({
                 'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand',
                 isSelected
                   ? 'border-brand bg-brand-soft text-ink'
-                  : 'border-line bg-white text-ink-soft hover:border-brand/40',
+                  : 'border-line bg-surface text-ink-soft hover:border-brand/40',
                 wrongPick && 'border-wrong bg-wrong-soft text-wrong',
                 missedPick && 'border-correct bg-correct-soft text-correct',
               )}

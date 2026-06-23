@@ -22,6 +22,11 @@ interface LessonPlayerProps {
   lesson: Lesson;
   initialSlideIndex: number;
   initialCompletedSlideIds: string[];
+  /**
+   * Called on the learner's first action. The page uses this to avoid yanking
+   * someone to a background-loaded resume position after they've started.
+   */
+  onInteraction?: () => void;
 }
 
 function requiresAnswer(slide: Slide): boolean {
@@ -39,6 +44,7 @@ export function LessonPlayer({
   lesson,
   initialSlideIndex,
   initialCompletedSlideIds,
+  onInteraction,
 }: LessonPlayerProps) {
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -97,12 +103,13 @@ export function LessonPlayer({
 
   const setAnswer = useCallback(
     (a: SlideAnswer) => {
+      onInteraction?.();
       setAnswers((prev) => ({ ...prev, [slide.id]: a }));
       // A fresh answer invalidates the previous check.
       setChecked(false);
       setIsCorrect(false);
     },
-    [slide.id],
+    [slide.id, onInteraction],
   );
 
   const markComplete = useCallback((id: string) => {
@@ -115,6 +122,7 @@ export function LessonPlayer({
   }, []);
 
   const handleCheck = () => {
+    onInteraction?.();
     const correct = validateAnswer(slide.validation, answer);
     setChecked(true);
     setIsCorrect(correct);
@@ -146,6 +154,7 @@ export function LessonPlayer({
   }, [user, course, lesson, slide.id, markComplete]);
 
   const handleAdvance = () => {
+    onInteraction?.();
     markComplete(slide.id);
     if (slideIndex < total - 1) {
       setSlideIndex((i) => i + 1);
@@ -155,6 +164,7 @@ export function LessonPlayer({
   };
 
   const handleBack = () => {
+    onInteraction?.();
     setSlideIndex((i) => Math.max(0, i - 1));
   };
 

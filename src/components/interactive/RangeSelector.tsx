@@ -115,7 +115,7 @@ export function RangeSelector({ config, answer, onAnswer }: Props) {
                 onKeyDown={(e) => onHandleKey(e, handle)}
                 style={{ left: `${pct(value)}%`, touchAction: 'none' }}
                 className={cn(
-                  '-top-3 absolute h-8 w-8 -translate-x-1/2 rounded-full border-2 border-brand bg-white shadow-md transition-transform',
+                  '-top-3 absolute h-8 w-8 -translate-x-1/2 rounded-full border-2 border-brand bg-surface shadow-md transition-transform',
                   'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand',
                   activeHandle === handle ? 'scale-110' : 'hover:scale-105',
                 )}

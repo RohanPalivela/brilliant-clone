@@ -34,9 +34,10 @@ test('an existing learner can sign back in', async ({ page }) => {
   await page.getByLabel('Password').fill(user.password);
   await page.getByRole('button', { name: 'Sign in' }).click();
 
-  await expect(
-    page.getByRole('heading', { name: /Good (morning|afternoon|evening)/ }),
-  ).toBeVisible();
+  // Signing in returns the learner to the protected page they came from
+  // (/profile), confirming they're authenticated again.
+  await expect(page).toHaveURL(/\/profile$/);
+  await expect(page.getByRole('heading', { name: 'Profile' })).toBeVisible();
 });
 
 test('shows a friendly error for invalid credentials', async ({ page }) => {

@@ -6,11 +6,13 @@ import {
   signInWithPopup,
   signOut,
   updateProfile,
+  deleteUser,
 } from 'firebase/auth';
 import { auth, googleProvider } from '../lib/firebase';
 import {
   ensureUserProfile,
   subscribeUserProfile,
+  deleteUserData,
 } from '../data/progressService';
 import type { UserProfile } from '../types/progress';
 import type { User } from 'firebase/auth';
@@ -24,18 +26,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     let unsubProfile: (() => void) | undefined;
 
-    const unsubAuth = onAuthStateChanged(auth, async (u) => {
+    const unsubAuth = onAuthStateChanged(auth, (u) => {
       unsubProfile?.();
       unsubProfile = undefined;
       setUser(u);
+      // Unblock the app the instant auth is known. We deliberately do NOT await
+      // any Firestore work here: gating render on a profile read added a full
+      // network round trip to every cold load (and to the lesson critical
+      // path). The profile streams in via the subscription below, and
+      // ensureUserProfile runs in the background to backfill a missing doc.
+      setLoading(false);
 
       if (u) {
-        await ensureUserProfile(u);
         unsubProfile = subscribeUserProfile(u.uid, setProfile);
+        void ensureUserProfile(u);
       } else {
         setProfile(null);
       }
-      setLoading(false);
     });
 
     return () => {
@@ -62,6 +69,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     await signOut(auth);
   };
 
+  const deleteAccount: AuthState['deleteAccount'] = async () => {
+    const current = auth.currentUser;
+    if (!current) return;
+    // Clear Firestore first while the user is still authenticated — security
+    // rules gate those writes on a live session. Only then remove the Auth
+    // record itself, which ends the session and triggers the redirect.
+    await deleteUserData(current.uid);
+    await deleteUser(current);
+  };
+
   const value: AuthState = {
     user,
     profile,
@@ -70,6 +87,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     signIn,
     signInWithGoogle,
     logout,
+    deleteAccount,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
