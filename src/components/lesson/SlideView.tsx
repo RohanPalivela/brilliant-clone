@@ -12,12 +12,35 @@ interface SlideViewProps {
   showMistakes: boolean;
 }
 
+// Render a prompt line, turning `backtick` segments into code-styled accents.
+function renderInline(text: string, keyPrefix: string) {
+  return text.split(/(`[^`]+`)/g).map((part, i) => {
+    if (part.length >= 2 && part.startsWith('`') && part.endsWith('`')) {
+      return (
+        <code
+          key={`${keyPrefix}-${i}`}
+          className="mx-0.5 rounded bg-cta px-1.5 py-0.5 align-middle font-mono text-[0.85em] text-white"
+        >
+          {part.slice(1, -1)}
+        </code>
+      );
+    }
+    return <span key={`${keyPrefix}-${i}`}>{part}</span>;
+  });
+}
+
+// Each newline in the prompt becomes its own spaced line.
 function Prompt({ text }: { text?: string }) {
   if (!text) return null;
+  const lines = text.split('\n');
   return (
-    <p className="mx-auto mb-8 max-w-lg text-center text-base leading-relaxed text-ink-soft">
-      {text}
-    </p>
+    <div className="mx-auto mb-8 flex max-w-lg flex-col gap-3 text-center">
+      {lines.map((line, i) => (
+        <p key={i} className="text-base leading-relaxed text-ink-soft">
+          {renderInline(line, `l${i}`)}
+        </p>
+      ))}
+    </div>
   );
 }
 

@@ -16,10 +16,10 @@ export const lesson5: Lesson = {
       type: 'explain',
       component: 'RichText',
       props: {
-        heading: 'The staircase wears a disguise',
-        body: 'New problem: given coins of fixed values, can you make a target amount exactly? It feels different, but it’s the staircase relabeled.',
+        heading: 'A classic problem: making change',
+        body: 'Coin change is one of the most well-known problems in computer science: given a set of coin values, can you combine them to make a target amount exactly?',
         emphasis:
-          'Jump sizes → coin values. The height you reach → the amount you make. reachable[] → can_make[].',
+          'It looks brand new, but it maps cleanly onto the staircase. Each coin is just another way to step toward the total, and asking whether an amount can be made is the same as asking whether a step can be reached.',
       },
       validation: { type: 'none' },
     },
@@ -54,7 +54,7 @@ export const lesson5: Lesson = {
         display: 'binary',
         name: 'can_make[]',
         prompt:
-          'Fill can_make[] for coins {3, 5}, amounts 0 to 11. can_make[amount] is 1 if (amount − 3) or (amount − 5) is makeable.',
+          'Fill `can_make[]` for coins {3, 5}, amounts 0 to 11.\n`can_make[amount]` is 1 if `amount − 3` or `amount − 5` is makeable.',
       },
       validation: { type: 'reachability', jumpSizes: [3, 5], steps: 11, target: 11 },
       hint: 'can_make[0] = 1 (make nothing with no coins). Then each amount reads can_make[amount − 3] and can_make[amount − 5].',
@@ -67,7 +67,7 @@ export const lesson5: Lesson = {
       component: 'CodeBlanks',
       props: {
         prompt:
-          'Same loop, new names. Complete the coin-change tabulation by filling the blanks.',
+          'Same loop, new names. Complete the coin-change tabulation by filling the blanks.\nNote: `can_make[0] = True` because you can always make 0 cents — with no coins at all.',
         codeLines: [
           [{ type: 'text', value: 'can_make = [False] * (amount + 1)' }],
           [
@@ -111,7 +111,7 @@ export const lesson5: Lesson = {
       component: 'RichText',
       props: {
         heading: 'Same pattern, new problem',
-        body: 'Coin change was reachability all along. Once you spot the shape — answers built from smaller answers — the same table and loop solve a whole family of problems.',
+        body: 'Coin change was reachable all along. Once you spot the shape — answers built from smaller answers — the same table and loop solve a whole family of problems.',
       },
       validation: { type: 'none' },
     },
