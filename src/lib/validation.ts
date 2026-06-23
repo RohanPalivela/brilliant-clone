@@ -1,5 +1,5 @@
 import type { Validation, SlideAnswer } from '../types/content';
-import { computeReachable } from './dp';
+import { computeReachable, knapsackOptimal } from './dp';
 
 function sameSet(a: string[], b: string[]): boolean {
   if (a.length !== b.length) return false;
@@ -36,6 +36,17 @@ export function validateAnswer(
       if (answer.kind !== 'blanks') return false;
       const ids = Object.keys(validation.correct);
       return ids.every((id) => answer.filled[id] === validation.correct[id]);
+    }
+    case 'knapsack': {
+      if (answer.kind !== 'items') return false;
+      const chosen = validation.items.filter((it) =>
+        answer.selectedIds.includes(it.id),
+      );
+      const weight = chosen.reduce((sum, it) => sum + it.weight, 0);
+      if (weight > validation.capacity) return false;
+      const value = chosen.reduce((sum, it) => sum + it.value, 0);
+      // Any selection that fits and reaches the optimal value is accepted.
+      return value === knapsackOptimal(validation.items, validation.capacity);
     }
     default:
       return false;

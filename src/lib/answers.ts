@@ -28,6 +28,9 @@ export function defaultAnswer(slide: Slide): SlideAnswer {
       return { kind: 'choice', selectedIds: [] };
     case 'CodeBlanks':
       return { kind: 'blanks', filled: {} };
+    case 'KnapsackPicker':
+      return { kind: 'items', selectedIds: [] };
+    case 'DPTable':
     case 'RichText':
     default:
       return { kind: 'none' };

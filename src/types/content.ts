@@ -193,6 +193,8 @@ export type Slide =
   | (BaseSlide & { component: 'RangeSelector'; props: RangeSelectorProps; validation?: Validation })
   | (BaseSlide & { component: 'MultipleChoice'; props: MultipleChoiceProps; validation?: Validation })
   | (BaseSlide & { component: 'CodeBlanks'; props: CodeBlanksProps; validation?: Validation })
+  | (BaseSlide & { component: 'KnapsackPicker'; props: KnapsackPickerProps; validation?: Validation })
+  | (BaseSlide & { component: 'DPTable'; props: DPTableProps; validation?: Validation })
   | (BaseSlide & { component: 'RichText'; props: RichTextProps; validation?: Validation });
 
 /** A learner's answer for a slide, shape depends on the widget. */
@@ -201,6 +203,7 @@ export type SlideAnswer =
   | { kind: 'choice'; selectedIds: string[] }
   | { kind: 'range'; indices: number[] }
   | { kind: 'blanks'; filled: Record<string, string> }
+  | { kind: 'items'; selectedIds: string[] }
   | { kind: 'none' };
 
 export type Difficulty = 'beginner' | 'intermediate' | 'advanced';
