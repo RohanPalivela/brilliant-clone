@@ -3,6 +3,7 @@ import { StairGrid } from '../interactive/StairGrid';
 import { ArrayRow } from '../interactive/ArrayRow';
 import { RangeSelector } from '../interactive/RangeSelector';
 import { MultipleChoice } from '../interactive/MultipleChoice';
+import { CodeBlanks } from '../interactive/CodeBlanks';
 
 interface SlideViewProps {
   slide: Slide;
@@ -56,6 +57,24 @@ export function SlideView({ slide, answer, onAnswer, showMistakes }: SlideViewPr
         </div>
       );
 
+    case 'CodeBlanks':
+      return (
+        <div>
+          <Prompt text={slide.props.prompt} />
+          <CodeBlanks
+            config={slide.props}
+            answer={answer}
+            onAnswer={onAnswer}
+            showMistakes={showMistakes}
+            correct={
+              slide.validation?.type === 'codeBlanks'
+                ? slide.validation.correct
+                : undefined
+            }
+          />
+        </div>
+      );
+
     case 'MultipleChoice':
       return (
         <MultipleChoice
@@ -80,6 +99,7 @@ export function SlideView({ slide, answer, onAnswer, showMistakes }: SlideViewPr
             editable: false,
             showSolution: true,
             highlightIndices: visual.highlightIndices,
+            display: visual.display,
           }
         : null;
       const noop = () => {};

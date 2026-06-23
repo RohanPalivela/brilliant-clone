@@ -43,6 +43,8 @@ export function StairGrid({
       showMistakes={showMistakes}
       highlightIndices={config.highlightIndices}
       lockedUpTo={config.prefillUpTo ?? 0}
+      display={config.display ?? (variant === 'array' ? 'binary' : 'icon')}
+      showArrows={config.showArrows}
       onChange={(next) => onAnswer({ kind: 'cells', marks: next })}
     />
   );

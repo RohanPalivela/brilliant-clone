@@ -32,6 +32,11 @@ export function validateAnswer(
         validation.correctIndices.map(String),
       );
     }
+    case 'codeBlanks': {
+      if (answer.kind !== 'blanks') return false;
+      const ids = Object.keys(validation.correct);
+      return ids.every((id) => answer.filled[id] === validation.correct[id]);
+    }
     default:
       return false;
   }

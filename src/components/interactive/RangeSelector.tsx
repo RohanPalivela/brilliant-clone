@@ -15,7 +15,9 @@ function rangeIndices(a: number, b: number): number[] {
 }
 
 export function RangeSelector({ config, answer, onAnswer }: Props) {
-  const { min, max, target, jumpSizes } = config;
+  const { min, max, target, jumpSizes, goalIndex } = config;
+  // The goal sits on the line but the handles can never select it.
+  const selectableMax = goalIndex != null ? goalIndex - 1 : max;
   const trackRef = useRef<HTMLDivElement>(null);
   const [activeHandle, setActiveHandle] = useState<'low' | 'high' | null>(null);
 
@@ -39,7 +41,7 @@ export function RangeSelector({ config, answer, onAnswer }: Props) {
     if (!rect) return low;
     const ratio = (clientX - rect.left) / rect.width;
     const v = Math.round(min + ratio * (max - min));
-    return Math.min(max, Math.max(min, v));
+    return Math.min(selectableMax, Math.max(min, v));
   };
 
   useEffect(() => {
@@ -64,7 +66,7 @@ export function RangeSelector({ config, answer, onAnswer }: Props) {
     if (!delta) return;
     e.preventDefault();
     if (handle === 'low') emit(Math.min(Math.max(min, low + delta), high - 1), high);
-    else emit(low, Math.max(Math.min(max, high + delta), low + 1));
+    else emit(low, Math.max(Math.min(selectableMax, high + delta), low + 1));
   };
 
   const pct = (v: number) => ((v - min) / (max - min)) * 100;
@@ -87,6 +89,17 @@ export function RangeSelector({ config, answer, onAnswer }: Props) {
             style={{ left: `${pct(low)}%`, width: `${pct(high) - pct(low)}%` }}
           />
 
+          {/* Fixed goal marker — shown on the line but not selectable. */}
+          {goalIndex != null && (
+            <div
+              className="-top-2.5 -translate-x-1/2 absolute flex h-7 w-7 items-center justify-center rounded-full border-2 border-cta bg-cta text-xs font-bold text-white shadow-md"
+              style={{ left: `${pct(goalIndex)}%` }}
+              aria-label={`Goal: ${goalIndex}`}
+            >
+              {goalIndex}
+            </div>
+          )}
+
           {(['low', 'high'] as const).map((handle) => {
             const value = handle === 'low' ? low : high;
             return (
@@ -96,7 +109,7 @@ export function RangeSelector({ config, answer, onAnswer }: Props) {
                 role="slider"
                 aria-label={`${handle === 'low' ? 'Lower' : 'Upper'} bound`}
                 aria-valuemin={min}
-                aria-valuemax={max}
+                aria-valuemax={selectableMax}
                 aria-valuenow={value}
                 onPointerDown={() => setActiveHandle(handle)}
                 onKeyDown={(e) => onHandleKey(e, handle)}
@@ -118,17 +131,22 @@ export function RangeSelector({ config, answer, onAnswer }: Props) {
         {/* Ticks */}
         <div className="relative mt-5 h-6">
           {ticks.map((t) => {
+            const isGoal = goalIndex != null && t === goalIndex;
             const inWindow = t >= low && t <= high;
             return (
               <span
                 key={t}
                 className={cn(
                   '-translate-x-1/2 absolute text-xs tabular-nums',
-                  inWindow ? 'font-bold text-brand' : 'text-muted',
+                  isGoal
+                    ? 'font-bold text-cta'
+                    : inWindow
+                      ? 'font-bold text-brand'
+                      : 'text-muted',
                 )}
                 style={{ left: `${pct(t)}%` }}
               >
-                {t}
+                {isGoal ? 'goal' : t}
               </span>
             );
           })}

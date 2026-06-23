@@ -26,6 +26,8 @@ export function defaultAnswer(slide: Slide): SlideAnswer {
       return { kind: 'range', indices: [] };
     case 'MultipleChoice':
       return { kind: 'choice', selectedIds: [] };
+    case 'CodeBlanks':
+      return { kind: 'blanks', filled: {} };
     case 'RichText':
     default:
       return { kind: 'none' };

@@ -1,10 +1,9 @@
 import type { Lesson } from '../../types/content';
 
-// Lesson 4 — Name the pattern and bridge to code.
-// Insight: this "build big from smaller, reuse sub-answers" shape is a named
-// pattern that scales to non-obvious cases and collapses into a tiny loop. The
-// capstone uses sparse, non-contiguous jumps {3, 7} to step 13 — six scattered
-// dead-ends (1, 2, 4, 5, 8, 11) that can't be eyeballed, only swept bottom-up.
+// Lesson 4 — Name the pattern and turn the by-hand sweep into code.
+// We skip another staircase and go straight to programming: a fill-in-the-blank
+// tabulation loop. The blanks are exactly the recurrence pieces the learner has
+// been doing by hand (the ground case, the look-back i − j, and the cell to set).
 export const lesson4: Lesson = {
   id: 'the-dp-mindset',
   courseId: 'dynamic-programming',
@@ -47,43 +46,63 @@ export const lesson4: Lesson = {
     },
     {
       id: 'l4-s3',
-      type: 'prompt',
-      component: 'StairGrid',
+      type: 'checkpoint',
+      component: 'CodeBlanks',
       props: {
-        steps: 13,
-        jumpSizes: [3, 7],
-        target: 13,
-        editable: true,
         prompt:
-          'Capstone: jumps of 3 or 7, climbing to step 13. These jumps are sparse — you can’t guess the dead-ends, so sweep upward from 0.',
+          'The by-hand sweep is just a loop. Drag the right pieces into the blanks to complete reachability.',
+        codeLines: [
+          [{ type: 'text', value: 'reachable = [False] * (n + 1)' }],
+          [
+            { type: 'text', value: 'reachable[' },
+            { type: 'blank', id: 'ground' },
+            { type: 'text', value: '] = True' },
+          ],
+          [{ type: 'text', value: 'for i in range(1, n + 1):' }],
+          [{ type: 'text', value: '    for j in jumps:' }],
+          [
+            { type: 'text', value: '        if i - j >= 0 and reachable[' },
+            { type: 'blank', id: 'lookback' },
+            { type: 'text', value: ']:' },
+          ],
+          [
+            { type: 'text', value: '            reachable[' },
+            { type: 'blank', id: 'current' },
+            { type: 'text', value: '] = True' },
+          ],
+        ],
+        tokens: [
+          { id: 'zero', label: '0' },
+          { id: 'iminusj', label: 'i - j' },
+          { id: 'i', label: 'i' },
+          { id: 'n', label: 'n' },
+          { id: 'iplusj', label: 'i + j' },
+          { id: 'j', label: 'j' },
+        ],
       },
-      validation: { type: 'reachability', jumpSizes: [3, 7], steps: 13, target: 13 },
-      hint: 'reachable[i] = reachable[i − 3] OR reachable[i − 7]. Build up one step at a time.',
+      validation: {
+        type: 'codeBlanks',
+        correct: { ground: 'zero', lookback: 'iminusj', current: 'i' },
+      },
+      hint: 'The ground (index 0) starts reachable. You arrive at i from i − j, and the cell you set is i itself.',
       explanationOnWrong:
-        'Work left to right: each step is ✓ only if (i − 3) or (i − 7) is ✓. Steps 1, 2, 4, 5, 8, and 11 never get a reachable launch pad.',
+        'reachable[0] is the ground (True). You check the launch pad reachable[i − j], and when it’s reachable you set reachable[i] = True.',
     },
     {
       id: 'l4-s4',
       type: 'explain',
       component: 'RichText',
       props: {
-        heading: 'From staircase to code',
-        body: 'The same bottom-up sweep you did by hand becomes a short tabulation loop — one pass, each cell read from earlier cells:',
+        heading: 'That’s tabulation',
+        body: 'One pass, each cell read from earlier cells — the exact bottom-up sweep you did by hand, now as code that works for any jump set.',
         pseudocode: [
-          'reachable = [false] * (n + 1)',
-          'reachable[0] = true',
-          'for i in 1..n:',
+          'reachable = [False] * (n + 1)',
+          'reachable[0] = True',
+          'for i in range(1, n + 1):',
           '    for j in jumps:',
           '        if i - j >= 0 and reachable[i - j]:',
-          '            reachable[i] = true',
+          '            reachable[i] = True',
         ].join('\n'),
-        emphasis: 'Next step: implement this in your language of choice.',
-        visual: {
-          component: 'StairGrid',
-          steps: 13,
-          jumpSizes: [3, 7],
-          highlightIndices: [6, 10, 13],
-        },
       },
       validation: { type: 'none' },
     },
@@ -93,7 +112,7 @@ export const lesson4: Lesson = {
       component: 'RichText',
       props: {
         heading: 'You think in DP now',
-        body: 'You discovered reachability, stored it in an array, generalized the rule, and named the pattern. That’s the core of dynamic programming.',
+        body: 'You discovered reachability, stored it in an array, generalized the rule, and wrote the loop. Next, we’ll meet the very same pattern wearing a disguise: making change with coins.',
       },
       validation: { type: 'none' },
     },

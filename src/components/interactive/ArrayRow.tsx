@@ -13,7 +13,7 @@ export function ArrayRow({ config, answer, onAnswer, showMistakes }: Props) {
   return (
     <div>
       <div className="mb-2 text-center text-xs font-medium tracking-wide text-muted">
-        reachable[]
+        {config.name ?? 'reachable[]'}
       </div>
       <StairGrid
         config={config}

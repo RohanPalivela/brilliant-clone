@@ -2,49 +2,30 @@ import type { Lesson } from '../../types/content';
 
 // Lesson 1 — Reachability discovered bottom-up (jumps of 3 or 5, target 11).
 // Insight: a step is reachable iff some step exactly one jump below it is
-// reachable. The single-cell prompt (slide 3) forces that recurrence — it can't
-// be answered by simulating paths, only by reading predecessors.
+// reachable. We open by naming the method (rather than asking a hard puzzle),
+// then force the recurrence on a single step, then enact it on the full grid
+// with dependency arrows and a real Check.
 export const lesson1: Lesson = {
   id: 'reach-the-top',
   courseId: 'dynamic-programming',
   title: 'Can You Reach the Top?',
   order: 1,
-  estimatedMinutes: 13,
+  estimatedMinutes: 12,
   slides: [
     {
       id: 'l1-s1',
-      type: 'prompt',
-      component: 'MultipleChoice',
+      type: 'explain',
+      component: 'RichText',
       props: {
-        question:
-          "You're on the ground (step 0). Each move climbs exactly 3 or 5 steps. Can you land exactly on step 11?",
-        options: [
-          { id: 'yes', label: 'Yes, it can be done' },
-          { id: 'no', label: 'No, 11 is impossible' },
-        ],
+        heading: 'A staircase you climb in jumps',
+        body: 'You start on the ground (step 0). Every move climbs exactly 3 or 5 steps. The question we keep asking is simple: can you land exactly on a given step?',
+        emphasis:
+          'Guessing jump sequences is slow and error-prone. Instead we’ll build a method that proves reachability one step at a time — the foundation of dynamic programming.',
       },
-      validation: { type: 'multipleChoice', correctIds: ['yes'] },
-      hint: 'Try stacking a few jumps: what is 3 + 3 + 5?',
-      explanationOnWrong:
-        'Actually you can: 3 + 3 + 5 = 11. Let’s discover why, one step at a time.',
+      validation: { type: 'none' },
     },
     {
       id: 'l1-s2',
-      type: 'explore',
-      component: 'StairGrid',
-      props: {
-        steps: 11,
-        jumpSizes: [3, 5],
-        target: 11,
-        editable: true,
-        prompt:
-          'Tap any step. Only two lower steps glow — the ones a single 3- or 5-jump below it. Those are the only steps that decide it.',
-      },
-      validation: { type: 'none' },
-      hint: 'Step 0 is free — you start there. From any reachable step you can go +3 or +5.',
-    },
-    {
-      id: 'l1-s3',
       type: 'prompt',
       component: 'MultipleChoice',
       props: {
@@ -58,10 +39,10 @@ export const lesson1: Lesson = {
       validation: { type: 'multipleChoice', correctIds: ['no'] },
       hint: 'You can only arrive at a step by jumping from a reachable one. If both launch pads are dead, so is the step.',
       explanationOnWrong:
-        'A step is only reachable if you can land on it from a reachable step. Step 7’s launch pads (4 and 2) are both ✗, so step 7 is ✗ too.',
+        'A step is only reachable if you can land on it from a reachable step. Step 7’s launch pads (4 and 2) are both ✗, so step 7 is ✗ too. Each step is decided entirely by its predecessors — that’s the state.',
     },
     {
-      id: 'l1-s4',
+      id: 'l1-s3',
       type: 'checkpoint',
       component: 'StairGrid',
       props: {
@@ -69,16 +50,17 @@ export const lesson1: Lesson = {
         jumpSizes: [3, 5],
         target: 11,
         editable: true,
+        showArrows: true,
         prompt:
-          'Now mark every step from 0 to 11. Work upward — each step depends only on the two below it.',
+          'Mark every step from 0 to 11. Tap a step to see the arrows from its launch pads — a step is reachable only if the step 3 or 5 below it is reachable.',
       },
       validation: { type: 'reachability', jumpSizes: [3, 5], steps: 11, target: 11 },
-      hint: 'A step is ✓ only if (step − 3) or (step − 5) is itself ✓.',
+      hint: 'A step is ✓ only if (step − 3) or (step − 5) is itself ✓. Start from step 0, which is always ✓.',
       explanationOnWrong:
         'Not quite. Start at step 0 (always ✓) and work upward: each step is ✓ only when step − 3 or step − 5 is ✓.',
     },
     {
-      id: 'l1-s5',
+      id: 'l1-s4',
       type: 'explain',
       component: 'RichText',
       props: {
@@ -96,12 +78,12 @@ export const lesson1: Lesson = {
       validation: { type: 'none' },
     },
     {
-      id: 'l1-s6',
+      id: 'l1-s5',
       type: 'celebrate',
       component: 'RichText',
       props: {
-        heading: 'Bottom-up thinking unlocked',
-        body: 'You reached the top by trusting the smaller steps. Next, we’ll give that staircase a memory.',
+        heading: 'This is bottom-up thinking',
+        body: 'Determine the next state from the previous ones. Now, let’s translate this to programming.',
       },
       validation: { type: 'none' },
     },
