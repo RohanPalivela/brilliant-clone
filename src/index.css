@@ -1,0 +1,83 @@
+@import 'tailwindcss';
+
+/* Brilliant-style design tokens */
+@theme {
+  --color-ink: #08060d;
+  --color-ink-soft: #4b5563;
+  --color-muted: #6b7280;
+  --color-surface: #ffffff;
+  --color-canvas: #f6f7f9;
+  --color-line: #e5e7eb;
+
+  --color-brand: #4f46e5;
+  --color-brand-soft: #eef2ff;
+
+  --color-correct: #16a34a;
+  --color-correct-soft: #dcfce7;
+  --color-wrong: #dc2626;
+  --color-wrong-soft: #fee2e2;
+  --color-flame: #f97316;
+
+  --color-cta: #0b1020;
+  --color-cta-hover: #1c2333;
+
+  --radius-card: 16px;
+  --shadow-card: 0 1px 2px rgba(16, 24, 40, 0.06), 0 8px 24px -12px rgba(16, 24, 40, 0.18);
+
+  --font-sans: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--color-canvas);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* Confetti + celebration animations (respect reduced motion) */
+@keyframes confetti-fall {
+  0% {
+    transform: translateY(-10vh) rotate(0deg);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(110vh) rotate(720deg);
+    opacity: 0;
+  }
+}
+
+@keyframes pop-in {
+  0% {
+    transform: scale(0.8);
+    opacity: 0;
+  }
+  60% {
+    transform: scale(1.04);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.animate-pop-in {
+  animation: pop-in 0.35s ease-out both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}
