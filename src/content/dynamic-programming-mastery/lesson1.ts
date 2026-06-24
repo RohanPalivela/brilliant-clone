@@ -62,10 +62,10 @@ export const lesson1: Lesson = {
       component: 'MultipleChoice',
       props: {
         question:
-          'To land on `step 7`, you can only arrive from `step 4` (that’s `7 − 3`) or `step 2` (that’s `7 − 5`).\nBoth step 4 and step 2 are unreachable from the ground.\nSo — is step 7 reachable?',
+          'To land on `step 7`, you can only arrive from `step 4` (that’s `7 − 3`) or `step 2` (that’s `7 − 5`).\nBoth step 4 and step 2 are unreachable from the ground.\nSo — is step 7 reachable from the ground?',
         options: [
-          { id: 'reach', label: 'Reachable ✓' },
-          { id: 'no', label: 'Not reachable ✗' },
+          { id: 'reach', label: 'Reachable' },
+          { id: 'no', label: 'Not reachable' },
         ],
       },
       validation: { type: 'multipleChoice', correctIds: ['no'] },

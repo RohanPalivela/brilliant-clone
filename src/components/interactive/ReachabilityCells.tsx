@@ -173,6 +173,9 @@ export function ReachabilityCells({
     arrowsEnabled && geom
       ? [...arrowTargetSet].flatMap((t) =>
           lookbackIndices(t, jumpSizes)
+            // Only draw arrows from steps you can actually stand on — a jump
+            // from an unreachable step isn't a real way to land here.
+            .filter((p) => reachable[p])
             .map((p, j) => ({
               from: geom.centers[p],
               to: geom.centers[t],

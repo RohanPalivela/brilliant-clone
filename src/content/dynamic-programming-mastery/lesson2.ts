@@ -20,7 +20,6 @@ export const lesson2: Lesson = {
         jumpSizes: [3, 5],
         prompt:
           'The staircase and an array are the same thing. Watch each step lie down to become one box in a row: its height turns into its index, and the ✓/✗ turns into a single bit — 1 if that step is reachable, 0 if not.',
-        highlightIndices: [3, 5, 6, 8],
         caption:
           'Same information, flatter shape. From here on we’ll store the answers in this row of cells: reachable[].',
       },
@@ -37,7 +36,6 @@ export const lesson2: Lesson = {
         showSolution: true,
         display: 'binary',
         name: 'reachable[]',
-        highlightIndices: [1, 3, 6],
         prompt:
           'Here’s how to fill one cell. Each index is a height; the cell stores 1 (reachable) or 0 (not).\nreachable[6]: read reachable[6 − 3] = reachable[3] = 1 → so reachable[6] = 1.\nreachable[1]: reachable[1 − 3] and reachable[1 − 5] are below index 0, so nothing reaches it → reachable[1] = 0.',
       },
