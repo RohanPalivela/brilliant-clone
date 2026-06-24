@@ -42,8 +42,8 @@ const reachableCpp = `bool reachable_steps(int n, std::vector<int>& jumps) {
 // Arc: reconnect to the reachability sweep you already did by hand → ground the
 // "build from smaller answers" idea (and separate the OR vs SUM operators so DP
 // doesn't get mistaken for "add the two cells before") → watch tabulation run →
-// name it → read the finished loop → prove you still own it by hand → write it
-// from blanks. See → name → write, just like lessons 5 and 6.
+// name it → read the finished loop → write it from blanks. See → name → write,
+// just like lessons 5 and 6.
 export const lesson4: Lesson = {
   id: 'the-dp-mindset',
   courseId: 'dynamic-programming-mastery',
@@ -211,26 +211,6 @@ export const lesson4: Lesson = {
       validation: { type: 'none' },
     },
     {
-      id: 'm4-s3b',
-      type: 'checkpoint',
-      component: 'ArrayRow',
-      props: {
-        steps: 11,
-        jumpSizes: [3, 5],
-        target: 11,
-        editable: true,
-        display: 'binary',
-        name: 'reachable[]',
-        prefillUpTo: 6,
-        prompt:
-          'One last hands-on check before you write the loop yourself. Steps 0–6 are already filled and locked. Finish `reachable[]` for jumps {3, 5} up to step 11.\nFor each remaining step, set it to 1 if `step − 3` or `step − 5` is reachable. Tap a cell to set 1, tap again for 0.',
-      },
-      validation: { type: 'reachability', jumpSizes: [3, 5], steps: 11, target: 11 },
-      hint: 'Work left to right from step 7. Each step reads reachable[step − 3] and reachable[step − 5]; if either is 1, this step is 1.',
-      explanationOnWrong:
-        'Sweep left to right: a step is reachable only if (step − 3) or (step − 5) is already reachable. For example step 11 reads step 8 and step 6 — same OR you’ve done by hand all lesson.',
-    },
-    {
       id: 'm4-s4',
       type: 'checkpoint',
       component: 'CodeBlanks',
@@ -280,7 +260,7 @@ export const lesson4: Lesson = {
       component: 'RichText',
       props: {
         heading: 'You think in DP now',
-        body: 'You reconnected the by-hand sweep, separated OR from SUM, watched the table fill, named the technique — tabulation — and wrote the loop. Next, we’ll meet the very same pattern wearing a disguise: making change with coins.',
+        body: 'You reconnected the by-hand sweep, separated OR from SUM, watched the table fill, named the technique — tabulation — and wrote the loop yourself. Next, we’ll meet the very same pattern wearing a disguise: making change with coins.',
       },
       validation: { type: 'none' },
     },

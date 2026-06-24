@@ -196,3 +196,98 @@ describe('validateAnswer — knapsack', () => {
     expect(validateAnswer(validation, { kind: 'none' })).toBe(false);
   });
 });
+
+describe('validateAnswer — coinSum', () => {
+  const feasible: Validation = { type: 'coinSum', coins: [3, 5], target: 11 };
+  const fewest: Validation = {
+    type: 'coinSum',
+    coins: [1, 3, 4],
+    target: 6,
+    fewest: true,
+  };
+
+  it('accepts any exact build in plain mode', () => {
+    expect(
+      validateAnswer(feasible, { kind: 'coins', picks: [3, 3, 5] }),
+    ).toBe(true);
+  });
+
+  it('rejects an overshoot', () => {
+    expect(validateAnswer(feasible, { kind: 'coins', picks: [5, 5, 5] })).toBe(
+      false,
+    );
+  });
+
+  it('rejects a coin that is not in the set', () => {
+    expect(validateAnswer(feasible, { kind: 'coins', picks: [4, 7] })).toBe(false);
+  });
+
+  it('accepts only the fewest-coin build in fewest mode', () => {
+    expect(validateAnswer(fewest, { kind: 'coins', picks: [3, 3] })).toBe(true);
+    // 4 + 1 + 1 hits 6 but uses 3 coins, not the minimum 2.
+    expect(validateAnswer(fewest, { kind: 'coins', picks: [4, 1, 1] })).toBe(
+      false,
+    );
+  });
+
+  it('rejects an answer of the wrong kind', () => {
+    expect(validateAnswer(feasible, { kind: 'none' })).toBe(false);
+  });
+});
+
+describe('validateAnswer — jumpPath', () => {
+  const validation: Validation = { type: 'jumpPath', jumpSizes: [3, 7], target: 13 };
+
+  it('accepts a sequence that lands exactly on the target', () => {
+    expect(validateAnswer(validation, { kind: 'path', jumps: [3, 3, 7] })).toBe(
+      true,
+    );
+    expect(validateAnswer(validation, { kind: 'path', jumps: [7, 3, 3] })).toBe(
+      true,
+    );
+  });
+
+  it('rejects a sequence that misses the target', () => {
+    expect(validateAnswer(validation, { kind: 'path', jumps: [3, 3, 3] })).toBe(
+      false,
+    );
+  });
+
+  it('rejects an empty path', () => {
+    expect(validateAnswer(validation, { kind: 'path', jumps: [] })).toBe(false);
+  });
+
+  it('rejects a jump that is not in the set', () => {
+    expect(validateAnswer(validation, { kind: 'path', jumps: [13] })).toBe(false);
+  });
+});
+
+describe('validateAnswer — minCoinChoice', () => {
+  // Coins {1,3,4}, amount 6: laying a 3 is the unique cheapest first move.
+  const validation: Validation = {
+    type: 'minCoinChoice',
+    coins: [1, 3, 4],
+    amount: 6,
+  };
+
+  it('accepts the optimal first coin', () => {
+    expect(validateAnswer(validation, { kind: 'choice', selectedIds: ['c3'] })).toBe(
+      true,
+    );
+  });
+
+  it('rejects a suboptimal first coin', () => {
+    expect(validateAnswer(validation, { kind: 'choice', selectedIds: ['c4'] })).toBe(
+      false,
+    );
+    expect(validateAnswer(validation, { kind: 'choice', selectedIds: ['c1'] })).toBe(
+      false,
+    );
+  });
+
+  it('rejects more than one selection', () => {
+    expect(
+      validateAnswer(validation, { kind: 'choice', selectedIds: ['c3', 'c1'] }),
+    ).toBe(false);
+  });
+});

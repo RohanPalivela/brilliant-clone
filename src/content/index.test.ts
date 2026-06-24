@@ -8,6 +8,8 @@ import {
   isLessonUnlocked,
 } from './index';
 import type { Course } from '../types/content';
+import { lookbackIndices, computeReachable, minCoinsTable, UNREACHABLE } from '../lib/dp';
+import { optimalFirstCoins } from '../lib/validation';
 
 const dp = courses[0];
 
@@ -135,6 +137,23 @@ describe('content integrity', () => {
     }
   });
 
+  it('PredecessorPicker answer keys equal the target look-backs', () => {
+    for (const slide of allSlides) {
+      if (
+        slide.component === 'PredecessorPicker' &&
+        slide.validation?.type === 'range'
+      ) {
+        const { steps, target, jumpSizes } = slide.props;
+        expect(target).toBeLessThanOrEqual(steps);
+        // The correct picks are exactly target − j for each jump (>= 0).
+        const expected = lookbackIndices(target, jumpSizes);
+        expect([...slide.validation.correctIndices].sort((a, b) => a - b)).toEqual(
+          expected,
+        );
+      }
+    }
+  });
+
   it('knapsack validations match their widget items and capacity', () => {
     for (const slide of allSlides) {
       if (
@@ -163,6 +182,53 @@ describe('content integrity', () => {
           expect(slide.props.steps).toBeGreaterThan(0);
           expect(slide.props.jumpSizes.length).toBeGreaterThan(0);
         }
+      }
+    }
+  });
+
+  it('CoinBuilder targets are reachable with the given coins', () => {
+    for (const slide of allSlides) {
+      if (
+        slide.component === 'CoinBuilder' &&
+        slide.validation?.type === 'coinSum'
+      ) {
+        expect(slide.validation.coins).toEqual(slide.props.coins);
+        expect(slide.validation.target).toBe(slide.props.target);
+        // The target must actually be buildable from the coins.
+        const best = minCoinsTable(slide.props.coins, slide.props.target);
+        expect(best[slide.props.target]).not.toBe(UNREACHABLE);
+      }
+    }
+  });
+
+  it('PathBuilder targets are reachable and within the drawn height', () => {
+    for (const slide of allSlides) {
+      if (
+        slide.component === 'PathBuilder' &&
+        slide.validation?.type === 'jumpPath'
+      ) {
+        expect(slide.validation.jumpSizes).toEqual(slide.props.jumpSizes);
+        expect(slide.validation.target).toBe(slide.props.target);
+        const reach = computeReachable(slide.props.target, slide.props.jumpSizes);
+        expect(reach[slide.props.target]).toBe(true);
+        expect(slide.props.height ?? slide.props.target).toBeGreaterThanOrEqual(
+          slide.props.target,
+        );
+      }
+    }
+  });
+
+  it('MinChoicePicker amounts are makeable so an optimal first coin exists', () => {
+    for (const slide of allSlides) {
+      if (
+        slide.component === 'MinChoicePicker' &&
+        slide.validation?.type === 'minCoinChoice'
+      ) {
+        expect(slide.validation.coins).toEqual(slide.props.coins);
+        expect(slide.validation.amount).toBe(slide.props.amount);
+        expect(
+          optimalFirstCoins(slide.props.coins, slide.props.amount).length,
+        ).toBeGreaterThan(0);
       }
     }
   });

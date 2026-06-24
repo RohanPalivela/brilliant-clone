@@ -64,6 +64,28 @@ describe('SlideView dispatch', () => {
     expect(screen.getByRole('slider', { name: 'Lower bound' })).toBeInTheDocument();
   });
 
+  it('renders a PredecessorPicker slide with its prompt', () => {
+    renderSlide(
+      {
+        id: 's',
+        type: 'checkpoint',
+        component: 'PredecessorPicker',
+        props: {
+          steps: 11,
+          jumpSizes: [3, 5],
+          target: 9,
+          prompt: 'Tap the cells reachable[9] reads',
+        },
+        validation: { type: 'range', correctIndices: [4, 6] },
+      },
+      { kind: 'range', indices: [] },
+    );
+    expect(screen.getByText('Tap the cells reachable[9] reads')).toBeInTheDocument();
+    expect(
+      screen.getByLabelText("Cell 9 — the cell you're deciding"),
+    ).toBeDisabled();
+  });
+
   it('renders a CodeBlanks slide with its solution wired in', () => {
     renderSlide(
       {

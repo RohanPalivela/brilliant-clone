@@ -1,8 +1,10 @@
 import type { Lesson } from '../../types/content';
 
 // Lesson 5 — Coin change (feasibility), the staircase in disguise.
-// Teacher first works a small can_make[] array, then the learner fills the full
-// one, then completes the (identical-shaped) tabulation loop.
+// The learner first builds the target amount by hand (a construction mechanic,
+// not a grid fill), then the teacher works a small can_make[] array, an MCQ
+// surfaces the look-back, the learner pins down one cell's predecessors and sees
+// they're the exact cells the staircase used, before completing the loop.
 export const lesson5: Lesson = {
   id: 'coin-change',
   courseId: 'dynamic-programming-mastery',
@@ -22,6 +24,23 @@ export const lesson5: Lesson = {
         bodyFirst: true,
       },
       validation: { type: 'none' },
+    },
+    {
+      id: 'm5-s1b',
+      type: 'checkpoint',
+      component: 'CoinBuilder',
+      props: {
+        coins: [3, 5],
+        target: 11,
+        prompt:
+          'First, just play with it. With only 3- and 5-cent coins, can you make exactly 11? Tap coins to drop them in; tap a coin in your tray to take it back. Overshoot and you’ll need to rethink the mix.',
+        caption:
+          'Feasibility by hand: combine the coins to hit the target exactly. In a moment we’ll let an array answer this for every amount at once.',
+      },
+      validation: { type: 'coinSum', coins: [3, 5], target: 11 },
+      hint: 'You have 3s and 5s. Three coins do it — mix the two sizes so they sum to 11.',
+      explanationOnWrong:
+        'Make 11 exactly from {3, 5}: 3 + 3 + 5 = 11. Drop coins until the total reads 11, with no overshoot.',
     },
     {
       id: 'm5-s2',
@@ -62,21 +81,23 @@ export const lesson5: Lesson = {
     {
       id: 'm5-s4',
       type: 'checkpoint',
-      component: 'ArrayRow',
+      component: 'PredecessorPicker',
       props: {
         steps: 11,
         jumpSizes: [3, 5],
-        target: 11,
-        editable: true,
-        display: 'binary',
+        target: 9,
+        variant: 'array',
         name: 'can_make[]',
+        moveLabel: 'coins',
         prompt:
-          'Your turn — fill `can_make[]` for coins {3, 5}, amounts 0 to 11.\nStart from can_make[0] = 1, then for each amount set it to 1 if `amount − 3` or `amount − 5` is makeable. Tap a cell to set 1, tap again for 0.',
+          'Don’t fill a whole new table — you’ve done that for {3, 5} already. Just prove it’s the same machine: tap the amounts that `can_make[9]` reads, given coins {3, 5}. Amount 9 shows a “?” because you’re choosing what it depends on.',
+        caption:
+          'These are the exact same cells you tapped for `reachable[9]` on the staircase — a coin is just a jump, an amount is just a step.',
       },
-      validation: { type: 'reachability', jumpSizes: [3, 5], steps: 11, target: 11 },
-      hint: 'can_make[0] = 1 (make nothing with no coins). Then each amount reads can_make[amount − 3] and can_make[amount − 5].',
+      validation: { type: 'range', correctIndices: [4, 6] },
+      hint: 'Subtract each coin from 9: 9 − 3 and 9 − 5. Tap those two amounts.',
       explanationOnWrong:
-        'Work left to right: an amount is makeable only if (amount − 3) or (amount − 5) is makeable. It’s the same table you built for the stairs.',
+        'can_make[9] reads 9 − 3 = 6 and 9 − 5 = 4 — not the coin values 3 and 5, and never amounts above 9. It’s the staircase look-back with new names.',
     },
     {
       id: 'm5-s5',

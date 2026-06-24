@@ -3,8 +3,10 @@ import type { Lesson } from '../../types/content';
 // Lesson 2 — Give the staircase a memory: map reachability onto a boolean
 // array reachable[] (jumps {3, 5}, length 11). Bridge from lesson 1's promise →
 // morph the stairs into a row → teacher works one cell → an MCQ surfaces the
-// "subtract to find predecessors" insight → small guided rung → full checkpoint
-// → animated DPTable → reuse recap → recurrence recap → tee up lesson 3.
+// "subtract to find predecessors" insight → a predecessor-pick makes the learner
+// isolate one cell's look-backs by hand (the recurrence, not another grid fill) →
+// the full table-extension checkpoint (compute-once / reuse) → animated DPTable →
+// reuse recap → recurrence recap → tee up lesson 3.
 export const lesson2: Lesson = {
   id: 'stairs-to-arrays',
   courseId: 'dynamic-programming-mastery',
@@ -80,23 +82,21 @@ export const lesson2: Lesson = {
     {
       id: 'm2-s2c',
       type: 'checkpoint',
-      component: 'ArrayRow',
+      component: 'PredecessorPicker',
       props: {
-        steps: 6,
+        steps: 11,
         jumpSizes: [3, 5],
-        target: 6,
-        editable: true,
-        prefillUpTo: 0,
-        display: 'binary',
-        name: 'reachable[]',
-        showArrows: true,
+        target: 9,
+        variant: 'array',
         prompt:
-          'Warm up on a short row first. reachable[0] = 1 is already locked (you start on the ground). Fill reachable[1..6] yourself: for each cell i, read reachable[i − 3] and reachable[i − 5] — if either is 1, tap the cell to set it to 1; leave it 0 otherwise. The look-back arrows show you which two cells to check.',
+          'Before filling a whole row, pin down where one cell looks. Tap the cells that `reachable[9]` reads — the ones a single 3- or 5-jump below it. Cell 9 shows a “?” because you’re choosing what it depends on, not its value.',
+        caption:
+          'With jumps {3, 5} the two cells you read aren’t neighbors — they’re scattered. That’s the recurrence: subtract a jump, never scan forward.',
       },
-      validation: { type: 'reachability', jumpSizes: [3, 5], steps: 6, target: 6 },
-      hint: 'For each cell i, only two cells matter: reachable[i − 3] and reachable[i − 5]. If either is 1, so is cell i.',
+      validation: { type: 'range', correctIndices: [4, 6] },
+      hint: 'Subtract each jump from 9: 9 − 3 and 9 − 5. Tap exactly those two cells.',
       explanationOnWrong:
-        'Work left to right from reachable[0] = 1. reachable[3] = 1 (3 − 3 = 0) and reachable[5] = 1 (5 − 5 = 0); reachable[6] = 1 because reachable[3] is. Cells 1, 2, 4 have no reachable predecessor, so they stay 0.',
+        'reachable[9] reads exactly 9 − 3 = 6 and 9 − 5 = 4 — never the cells above it, and never the jump sizes (3 and 5) themselves. Tap cells 6 and 4.',
     },
     {
       id: 'm2-s3',

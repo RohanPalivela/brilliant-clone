@@ -2,7 +2,8 @@ import type { Lesson } from '../../types/content';
 
 // Lesson 1 — The staircase problem. Reachability discovered bottom-up
 // (jumps of 3 or 5, target 11). Direct-instruction shape: show the problem with
-// a labeled diagram, define ✓/✗ and the look-back arithmetic, motivate looking
+// a labeled diagram, define ✓/✗ and the look-back arithmetic, let the learner
+// feel how fiddly guessing a path forward is (PathBuilder), motivate looking
 // backward, walk a smaller staircase step-by-step at the learner's own pace,
 // name the look-backward idea on the abstract schematic, surface the insight
 // with an MCQ, then guided + independent practice, then an animated DPTable
@@ -51,6 +52,23 @@ export const lesson1: Lesson = {
         },
       },
       validation: { type: 'none' },
+    },
+    {
+      id: 'm1-s2b',
+      type: 'checkpoint',
+      component: 'PathBuilder',
+      props: {
+        jumpSizes: [3, 5],
+        target: 11,
+        prompt:
+          'Before we find a method, just try it by hand. Stack +3 and +5 jumps to land the climber exactly on step 11. Tap +3 or +5 to climb; overshooting is blocked, so you have to land precisely.\nNotice how much trial and error this takes — and that some choices strand you with no legal jump left.',
+        caption:
+          'Guessing your way up works for one short staircase but is fiddly and easy to get stuck on. Next we’ll see why brute force doesn’t scale — and find a smarter way.',
+      },
+      validation: { type: 'jumpPath', jumpSizes: [3, 5], target: 11 },
+      hint: 'It takes three jumps that add to 11. Two of one size and one of the other — try starting with the small ones.',
+      explanationOnWrong:
+        'Land on 11 exactly: 3 + 3 + 5 = 11 (order doesn’t matter). Every move must be +3 or +5, and you can never step past the goal — if you’re stranded (say on 10 after 5 + 5), reset and try a different mix.',
     },
     {
       id: 'm1-s3',

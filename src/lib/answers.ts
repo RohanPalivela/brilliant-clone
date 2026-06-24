@@ -23,13 +23,19 @@ export function defaultAnswer(slide: Slide): SlideAnswer {
       return { kind: 'cells', marks };
     }
     case 'RangeSelector':
+    case 'PredecessorPicker':
       return { kind: 'range', indices: [] };
     case 'MultipleChoice':
+    case 'MinChoicePicker':
       return { kind: 'choice', selectedIds: [] };
     case 'CodeBlanks':
       return { kind: 'blanks', filled: {} };
     case 'KnapsackPicker':
       return { kind: 'items', selectedIds: [] };
+    case 'CoinBuilder':
+      return { kind: 'coins', picks: [] };
+    case 'PathBuilder':
+      return { kind: 'path', jumps: [] };
     case 'DPTable':
     case 'RichText':
     default:

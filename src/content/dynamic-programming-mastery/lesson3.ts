@@ -3,8 +3,11 @@ import type { Lesson } from '../../types/content';
 // Lesson 3 — Transfer the reachability method to a new jump set {2, 3, 4}.
 // The method is identical; only the look-back distances change. The teacher
 // works a small concrete example on an animated staircase, an MCQ surfaces the
-// specific predecessors, then the learner fills a bigger staircase themselves
-// before watching the same sweep run and recapping.
+// specific predecessors, then — instead of re-filling yet another whole
+// staircase by hand — the learner enacts "only the look-back set moved" by
+// picking step 7's three predecessors directly. They then watch the same sweep
+// produce a nearly-full map and name *why* it's so dense (the jump set controls
+// reachability), which sets up the sparse capstone in lesson 4.
 export const lesson3: Lesson = {
   id: 'changing-the-rules',
   courseId: 'dynamic-programming-mastery',
@@ -82,39 +85,21 @@ export const lesson3: Lesson = {
     {
       id: 'm3-s3b',
       type: 'checkpoint',
-      component: 'StairGrid',
+      component: 'PredecessorPicker',
       props: {
-        steps: 7,
+        steps: 9,
         jumpSizes: [2, 3, 4],
         target: 7,
-        editable: true,
-        showArrows: true,
-        prefillUpTo: 3,
+        variant: 'stairs',
         prompt:
-          'Your turn — solve the whole staircase to step 7 with jumps of 2, 3, or 4. Steps 0–3 are already filled in; work upward from step 4, one step at a time.\nTap a step once to mark it ✓ if it can be reached, tap again for ✗ if it can’t. A step is ✓ only when the step 2, 3, or 4 below it is ✓.',
-      },
-      validation: { type: 'reachability', jumpSizes: [2, 3, 4], steps: 7, target: 7 },
-      hint: 'For each step i, look at i − 2, i − 3, and i − 4. If any of those is ✓, then i is ✓ too.',
-      explanationOnWrong:
-        'Work left to right. A step is ✓ only if (step − 2), (step − 3), or (step − 4) is ✓ — same method as before, just three look-backs instead of two.',
-    },
-    {
-      id: 'm3-s4',
-      type: 'checkpoint',
-      component: 'RangeSelector',
-      props: {
-        min: 1,
-        max: 7,
-        target: 7,
-        goalIndex: 7,
-        jumpSizes: [2, 3, 4],
-        prompt:
-          'One more, on the number line. Drag the window to cover exactly the earlier steps that feed step 7 — the indices `7 − j` for each jump `j`.\nStep 7 is highlighted but not selectable; you’re choosing the steps it transitions from.',
+          'Enact the only thing that changed: the look-back set. Tap the steps that decide step 7 now that a move can be 2, 3, or 4. Step 7 shows a “?” — you’re choosing which steps it looks back at, not its value.',
+        caption:
+          'Three jumps, so three look-backs — and because 2, 3, 4 are consecutive, the steps you tap happen to sit side by side.',
       },
       validation: { type: 'range', correctIndices: [3, 4, 5] },
-      hint: 'Step 7 depends on 7 − 2, 7 − 3, and 7 − 4.',
+      hint: 'Subtract each jump from 7: 7 − 2, 7 − 3, and 7 − 4.',
       explanationOnWrong:
-        'Subtract each jump from 7: 7 − 4 = 3, 7 − 3 = 4, 7 − 2 = 5. The states you transition from are {3, 4, 5}.',
+        'Step 7 looks back at 7 − 2 = 5, 7 − 3 = 4, and 7 − 4 = 3 — tap steps 5, 4, and 3. Not the jump sizes themselves, and never the steps above 7.',
     },
     {
       id: 'm3-s5',
@@ -129,6 +114,32 @@ export const lesson3: Lesson = {
         caption: 'Swap the jump set and the same loop solves a new problem.',
       },
       validation: { type: 'none' },
+    },
+    {
+      id: 'm3-s4',
+      type: 'checkpoint',
+      component: 'MultipleChoice',
+      props: {
+        question:
+          'With jumps {2, 3, 4}, almost every step came out reachable — only step 1 was a dead end. Why so few gaps?',
+        options: [
+          {
+            id: 'dense',
+            label:
+              'Small, closely-spaced jumps leave almost no step without a reachable step below it — the jump set controls how much you can reach',
+          },
+          { id: 'short', label: 'The staircase just wasn’t tall enough' },
+          {
+            id: 'order',
+            label: 'Because we swept left to right instead of right to left',
+          },
+          { id: 'ground', label: 'Because step 0 is always reachable' },
+        ],
+      },
+      validation: { type: 'multipleChoice', correctIds: ['dense'] },
+      hint: 'Think about the largest gap that could ever form between reachable steps when the smallest jump is just 2.',
+      explanationOnWrong:
+        'It’s the jump set. With small, consecutive jumps {2, 3, 4}, every step from 2 upward has a reachable step 2, 3, or 4 below it, so gaps can’t form. Sparser jumps — like {3, 7} next lesson — leave many dead ends.',
     },
     {
       id: 'm3-s6',

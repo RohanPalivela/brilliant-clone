@@ -15,9 +15,13 @@ export type ComponentType =
   | 'StairsToArray'
   | 'StaircaseWalkthrough'
   | 'RangeSelector'
+  | 'PredecessorPicker'
   | 'MultipleChoice'
   | 'CodeBlanks'
   | 'KnapsackPicker'
+  | 'CoinBuilder'
+  | 'PathBuilder'
+  | 'MinChoicePicker'
   | 'DPTable'
   | 'SubproblemIsolation'
   | 'GreedyFailure'
@@ -125,6 +129,35 @@ export interface RangeSelectorProps {
   prompt?: string;
   /** A fixed goal shown highlighted on the line but not selectable by the handles. */
   goalIndex?: number;
+}
+
+/**
+ * "Tap the cells this one depends on." The learner selects the exact earlier
+ * cells that decide `target` — its look-backs `target − j` for each jump `j`.
+ * Unlike RangeSelector (a contiguous window), this works for any jump set,
+ * including non-contiguous ones like {3, 5} where the dependencies are
+ * scattered, not adjacent. It isolates the recurrence: you can't answer it by
+ * simulating jumps forward, only by reasoning backward from predecessors.
+ *
+ * Reuses the `range` answer/validation shape: the answer is the set of selected
+ * indices, validated against `lookbackIndices(target, jumpSizes)`.
+ */
+export interface PredecessorPickerProps {
+  /** Row length: cells 0..steps. Make this a few above `target` so there are
+   *  forward cells to (incorrectly) consider — "look backward, not forward". */
+  steps: number;
+  jumpSizes: number[];
+  /** The cell whose dependencies the learner selects (highlighted, locked). */
+  target: number;
+  prompt?: string;
+  /** 'stairs' (rising heights) or 'array' (flat squares). Defaults to 'array'. */
+  variant?: 'stairs' | 'array';
+  /** Optional array label shown above the row, e.g. 'can_make[]'. */
+  name?: string;
+  /** What the move sizes are called in copy: 'jumps' (default) or 'coins'. */
+  moveLabel?: string;
+  /** Caption shown beneath the row. */
+  caption?: string;
 }
 
 export interface MultipleChoiceOption {
@@ -290,6 +323,64 @@ export interface KnapsackPickerProps {
 }
 
 /**
+ * "Build the amount." The learner taps coin buttons to drop coins into a tray,
+ * accumulating toward a target. A construction mechanic — the opposite of
+ * classifying cells: you assemble a concrete solution and watch the running
+ * total. In `fewest` mode success also requires using the minimum number of
+ * coins, so the learner feels the optimization the table later automates.
+ */
+export interface CoinBuilderProps {
+  /** Coin denominations the learner can tap, e.g. [3, 5]. */
+  coins: number[];
+  /** The amount to build exactly. */
+  target: number;
+  /** When true, hitting the target only counts if it uses the fewest coins. */
+  fewest?: boolean;
+  /** Show the fewest-possible-coins goal as a target line. */
+  showFewest?: boolean;
+  prompt?: string;
+  /** Caption shown beneath the tray. */
+  caption?: string;
+}
+
+/**
+ * "Build a path." The learner appends jumps (e.g. +3 / +7) and a climber walks
+ * up the staircase, landing exactly on `target` or overshooting. A sequence-
+ * construction mechanic: you reason *forward* by assembling an ordered list of
+ * moves, the complement to the backward look-back the table uses. Overshooting
+ * is blocked so the only way to win is to land precisely.
+ */
+export interface PathBuilderProps {
+  /** Allowed jump sizes the learner can append, e.g. [3, 7]. */
+  jumpSizes: number[];
+  /** Step the climber must land on exactly. */
+  target: number;
+  /** Tallest step drawn; defaults to `target`. Keep >= target. */
+  height?: number;
+  prompt?: string;
+  /** Caption shown beneath the staircase. */
+  caption?: string;
+}
+
+/**
+ * "Pick the cheapest first coin." For optimization DP: the amount Z is shown
+ * with one card per coin, each revealing the already-solved cost of the
+ * subproblem Z − coin. The learner chooses which single coin to lay down first
+ * — i.e. which predecessor subproblem minimizes 1 + best[Z − coin]. A
+ * comparative-selection mechanic that isolates the argmin at the heart of the
+ * min-coins recurrence. Reuses the `choice` answer shape (option id = `c<coin>`).
+ */
+export interface MinChoicePickerProps {
+  /** Coin denominations available, e.g. [1, 3, 4]. */
+  coins: number[];
+  /** The amount Z whose first coin the learner is choosing. */
+  amount: number;
+  prompt?: string;
+  /** Caption shown beneath the cards. */
+  caption?: string;
+}
+
+/**
  * Animated "watch the algorithm run" table. Read-only: it fills bottom-up so
  * learners see the recurrence execute. Three flavors share one widget.
  */
@@ -324,7 +415,10 @@ export type Validation =
   | { type: 'multipleChoice'; correctIds: string[] }
   | { type: 'range'; correctIndices: number[] }
   | { type: 'codeBlanks'; correct: Record<string, string> }
-  | { type: 'knapsack'; capacity: number; items: KnapsackItem[] };
+  | { type: 'knapsack'; capacity: number; items: KnapsackItem[] }
+  | { type: 'coinSum'; coins: number[]; target: number; fewest?: boolean }
+  | { type: 'jumpPath'; jumpSizes: number[]; target: number }
+  | { type: 'minCoinChoice'; coins: number[]; amount: number };
 
 interface BaseSlide {
   id: string;
@@ -339,9 +433,13 @@ export type Slide =
   | (BaseSlide & { component: 'StairsToArray'; props: StairsToArrayProps; validation?: Validation })
   | (BaseSlide & { component: 'StaircaseWalkthrough'; props: StaircaseWalkthroughProps; validation?: Validation })
   | (BaseSlide & { component: 'RangeSelector'; props: RangeSelectorProps; validation?: Validation })
+  | (BaseSlide & { component: 'PredecessorPicker'; props: PredecessorPickerProps; validation?: Validation })
   | (BaseSlide & { component: 'MultipleChoice'; props: MultipleChoiceProps; validation?: Validation })
   | (BaseSlide & { component: 'CodeBlanks'; props: CodeBlanksProps; validation?: Validation })
   | (BaseSlide & { component: 'KnapsackPicker'; props: KnapsackPickerProps; validation?: Validation })
+  | (BaseSlide & { component: 'CoinBuilder'; props: CoinBuilderProps; validation?: Validation })
+  | (BaseSlide & { component: 'PathBuilder'; props: PathBuilderProps; validation?: Validation })
+  | (BaseSlide & { component: 'MinChoicePicker'; props: MinChoicePickerProps; validation?: Validation })
   | (BaseSlide & { component: 'DPTable'; props: DPTableProps; validation?: Validation })
   | (BaseSlide & { component: 'SubproblemIsolation'; props: SubproblemIsolationProps; validation?: Validation })
   | (BaseSlide & { component: 'GreedyFailure'; props: GreedyFailureProps; validation?: Validation })
@@ -356,6 +454,8 @@ export type SlideAnswer =
   | { kind: 'range'; indices: number[] }
   | { kind: 'blanks'; filled: Record<string, string> }
   | { kind: 'items'; selectedIds: string[] }
+  | { kind: 'coins'; picks: number[] }
+  | { kind: 'path'; jumps: number[] }
   | { kind: 'none' };
 
 export type Difficulty = 'beginner' | 'intermediate' | 'advanced';

@@ -49,6 +49,15 @@ describe('defaultAnswer', () => {
     expect(defaultAnswer(slide)).toEqual({ kind: 'range', indices: [] });
   });
 
+  it('returns an empty range answer for PredecessorPicker', () => {
+    const slide: Slide = {
+      ...base,
+      component: 'PredecessorPicker',
+      props: { steps: 11, jumpSizes: [3, 5], target: 9 },
+    };
+    expect(defaultAnswer(slide)).toEqual({ kind: 'range', indices: [] });
+  });
+
   it('returns an empty choice answer for MultipleChoice', () => {
     const slide: Slide = {
       ...base,

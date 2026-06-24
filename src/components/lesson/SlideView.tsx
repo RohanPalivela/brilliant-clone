@@ -4,9 +4,13 @@ import { ArrayRow } from '../interactive/ArrayRow';
 import { StairsToArray } from '../interactive/StairsToArray';
 import { StaircaseWalkthrough } from '../interactive/StaircaseWalkthrough';
 import { RangeSelector } from '../interactive/RangeSelector';
+import { PredecessorPicker } from '../interactive/PredecessorPicker';
 import { MultipleChoice } from '../interactive/MultipleChoice';
 import { CodeBlanks } from '../interactive/CodeBlanks';
 import { KnapsackPicker } from '../interactive/KnapsackPicker';
+import { CoinBuilder } from '../interactive/CoinBuilder';
+import { PathBuilder } from '../interactive/PathBuilder';
+import { MinChoicePicker } from '../interactive/MinChoicePicker';
 import { DPTable } from '../interactive/DPTable';
 import { SubproblemIsolation } from '../interactive/SubproblemIsolation';
 import { GreedyFailure } from '../interactive/GreedyFailure';
@@ -90,6 +94,19 @@ export function SlideView({ slide, answer, onAnswer, showMistakes }: SlideViewPr
         </div>
       );
 
+    case 'PredecessorPicker':
+      return (
+        <div>
+          <Prompt text={slide.props.prompt} />
+          <PredecessorPicker
+            config={slide.props}
+            answer={answer}
+            onAnswer={onAnswer}
+            showMistakes={showMistakes}
+          />
+        </div>
+      );
+
     case 'CodeBlanks':
       return (
         <div>
@@ -128,6 +145,45 @@ export function SlideView({ slide, answer, onAnswer, showMistakes }: SlideViewPr
         <div>
           <Prompt text={slide.props.prompt} />
           <KnapsackPicker
+            config={slide.props}
+            answer={answer}
+            onAnswer={onAnswer}
+            showMistakes={showMistakes}
+          />
+        </div>
+      );
+
+    case 'CoinBuilder':
+      return (
+        <div>
+          <Prompt text={slide.props.prompt} />
+          <CoinBuilder
+            config={slide.props}
+            answer={answer}
+            onAnswer={onAnswer}
+            showMistakes={showMistakes}
+          />
+        </div>
+      );
+
+    case 'PathBuilder':
+      return (
+        <div>
+          <Prompt text={slide.props.prompt} />
+          <PathBuilder
+            config={slide.props}
+            answer={answer}
+            onAnswer={onAnswer}
+            showMistakes={showMistakes}
+          />
+        </div>
+      );
+
+    case 'MinChoicePicker':
+      return (
+        <div>
+          <Prompt text={slide.props.prompt} />
+          <MinChoicePicker
             config={slide.props}
             answer={answer}
             onAnswer={onAnswer}

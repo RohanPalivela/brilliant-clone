@@ -1,5 +1,20 @@
 import type { Validation, SlideAnswer } from '../types/content';
-import { computeReachable, knapsackOptimal } from './dp';
+import { computeReachable, knapsackOptimal, minCoinsTable, UNREACHABLE } from './dp';
+
+/** Coin values (sorted) whose first-coin choice is optimal for `amount`:
+ *  those c where 1 + best[amount − c] equals the best cost for `amount`. */
+export function optimalFirstCoins(coins: number[], amount: number): number[] {
+  const best = minCoinsTable(coins, amount);
+  if (best[amount] === UNREACHABLE) return [];
+  return coins
+    .filter(
+      (c) =>
+        amount - c >= 0 &&
+        best[amount - c] !== UNREACHABLE &&
+        best[amount - c] + 1 === best[amount],
+    )
+    .sort((a, b) => a - b);
+}
 
 function sameSet(a: string[], b: string[]): boolean {
   if (a.length !== b.length) return false;
@@ -47,6 +62,34 @@ export function validateAnswer(
       const value = chosen.reduce((sum, it) => sum + it.value, 0);
       // Any selection that fits and reaches the optimal value is accepted.
       return value === knapsackOptimal(validation.items, validation.capacity);
+    }
+    case 'coinSum': {
+      if (answer.kind !== 'coins') return false;
+      const allowed = new Set(validation.coins);
+      if (!answer.picks.every((c) => allowed.has(c))) return false;
+      const sum = answer.picks.reduce((s, c) => s + c, 0);
+      if (sum !== validation.target) return false;
+      if (!validation.fewest) return true;
+      const best = minCoinsTable(validation.coins, validation.target);
+      return (
+        best[validation.target] !== UNREACHABLE &&
+        answer.picks.length === best[validation.target]
+      );
+    }
+    case 'jumpPath': {
+      if (answer.kind !== 'path') return false;
+      const allowed = new Set(validation.jumpSizes);
+      if (answer.jumps.length === 0) return false;
+      if (!answer.jumps.every((j) => allowed.has(j))) return false;
+      const sum = answer.jumps.reduce((s, j) => s + j, 0);
+      return sum === validation.target;
+    }
+    case 'minCoinChoice': {
+      if (answer.kind !== 'choice') return false;
+      if (answer.selectedIds.length !== 1) return false;
+      const optimal = optimalFirstCoins(validation.coins, validation.amount);
+      const optimalIds = new Set(optimal.map((c) => `c${c}`));
+      return optimalIds.has(answer.selectedIds[0]);
     }
     default:
       return false;
