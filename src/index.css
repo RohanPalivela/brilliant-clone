@@ -24,6 +24,16 @@
   --color-cta: #0b1020;
   --color-cta-hover: #1c2333;
 
+  /* Code / IDE surfaces. A real-editor dark palette (GitHub-dark family) used
+     for every code block and inline snippet. It sits as a near-black inset panel
+     on the light page and stays a distinct dark panel on the dark page, so it
+     reads like an editor in both themes and never picks up the CTA's indigo. */
+  --color-code-bg: #0d1117;
+  --color-code-bar: #161b22;
+  --color-code-border: #30363d;
+  --color-code-text: #e6edf3;
+  --color-code-muted: #8b949e;
+
   --radius-card: 16px;
   --shadow-card: 0 1px 2px rgba(16, 24, 40, 0.06), 0 8px 24px -12px rgba(16, 24, 40, 0.18);
 

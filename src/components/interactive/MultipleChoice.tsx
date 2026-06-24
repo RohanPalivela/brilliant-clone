@@ -19,7 +19,7 @@ function renderInline(text: string, keyPrefix: string) {
       return (
         <code
           key={`${keyPrefix}-${i}`}
-          className="mx-0.5 rounded bg-cta px-1.5 py-0.5 align-middle font-mono text-[0.85em] text-white"
+          className="mx-0.5 rounded border border-code-border bg-code-bg px-1.5 py-0.5 align-middle font-mono text-[0.85em] text-code-text"
         >
           {part.slice(1, -1)}
         </code>

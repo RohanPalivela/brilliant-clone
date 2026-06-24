@@ -20,6 +20,9 @@ export type ComponentType =
   | 'KnapsackPicker'
   | 'DPTable'
   | 'SubproblemIsolation'
+  | 'GreedyFailure'
+  | 'CoinRecurrence'
+  | 'CodeViewer'
   | 'RichText';
 
 export type CellMark = 'empty' | 'check' | 'cross';
@@ -129,7 +132,7 @@ export interface MultipleChoiceProps {
 }
 
 export interface RichTextVisual {
-  component: 'StairGrid' | 'ArrayRow' | 'ForwardExplosion';
+  component: 'StairGrid' | 'ArrayRow' | 'ForwardExplosion' | 'FibonacciSequence';
   /** Stairs/array length for grid reveals. Unused by ForwardExplosion. */
   steps?: number;
   jumpSizes: number[];
@@ -139,8 +142,37 @@ export interface RichTextVisual {
   display?: CellDisplay;
   /** ForwardExplosion only: how many times the forward paths branch. */
   depth?: number;
+  /** FibonacciSequence only: number of terms to build (default 7). */
+  count?: number;
+  /** FibonacciSequence only: the first two terms (default [0, 1]). */
+  seeds?: [number, number];
+  /** FibonacciSequence only: letter used for cell sub-labels, e.g. 'F'. */
+  label?: string;
+  /** FibonacciSequence only: index shown for the first cell's sub-label. */
+  startIndex?: number;
   /** Caption shown beneath the visual. */
   caption?: string;
+}
+
+/** One language tab in the CodeViewer editor panel. */
+export interface CodeViewerTab {
+  id: string;
+  /** Tab label, e.g. 'Python'. */
+  label: string;
+  /** File extension shown in the title bar, e.g. 'py'. */
+  language: string;
+  code: string;
+}
+
+/**
+ * A read-only code panel styled like an editor window (traffic-light dots,
+ * filename, language tabs, numbered monospace body). Purely presentational.
+ */
+export interface CodeViewerProps {
+  /** Filename without extension; the active tab's `language` is appended. */
+  filename?: string;
+  tabs: CodeViewerTab[];
+  prompt?: string;
 }
 
 /** One token in a line of code: literal text or a fill-in-the-blank slot. */
@@ -169,6 +201,46 @@ export interface CodeBlanksProps {
  * stay unknown because they don't affect the goal. The goal then resolves to ✓.
  */
 export interface SubproblemIsolationProps {
+  prompt?: string;
+  /** Caption shown beneath the diagram. */
+  caption?: string;
+}
+
+/**
+ * A read-only, looping comparison that shows why greedy fails for min-coin
+ * change: the greedy lane grabs the biggest coin first and ends with more
+ * coins than the optimal lane, with a count badge on each so the difference is
+ * impossible to miss.
+ */
+export interface GreedyFailureProps {
+  /** Coin denominations available, e.g. [1, 3, 4]. */
+  coins: number[];
+  /** Target amount being made, e.g. 6. */
+  amount: number;
+  /** Coins greedy grabs, biggest-first, e.g. [4, 1, 1]. */
+  greedyPick: number[];
+  /** The fewest-coins solution, e.g. [3, 3]. */
+  optimalPick: number[];
+  prompt?: string;
+  /** Caption shown beneath the diagram. */
+  caption?: string;
+}
+
+/**
+ * A read-only, looping schematic of the min-coins recurrence: the goal Z
+ * depends on two already-solved subproblems (Z − X and Z − Y) with known
+ * costs. It marks the cheaper one, adds a single coin along that arrow, and
+ * resolves Z to 1 + the smaller cost.
+ */
+export interface CoinRecurrenceProps {
+  /** Label for the first coin denomination, e.g. 'X'. Defaults to 'X'. */
+  coinXLabel?: string;
+  /** Label for the second coin denomination, e.g. 'Y'. Defaults to 'Y'. */
+  coinYLabel?: string;
+  /** Known fewest coins for the Z − X subproblem. Defaults to 5. */
+  costX?: number;
+  /** Known fewest coins for the Z − Y subproblem. Defaults to 4. */
+  costY?: number;
   prompt?: string;
   /** Caption shown beneath the diagram. */
   caption?: string;
@@ -257,7 +329,10 @@ export type Slide =
   | (BaseSlide & { component: 'KnapsackPicker'; props: KnapsackPickerProps; validation?: Validation })
   | (BaseSlide & { component: 'DPTable'; props: DPTableProps; validation?: Validation })
   | (BaseSlide & { component: 'SubproblemIsolation'; props: SubproblemIsolationProps; validation?: Validation })
-  | (BaseSlide & { component: 'RichText'; props: RichTextProps; validation?: Validation });
+  | (BaseSlide & { component: 'GreedyFailure'; props: GreedyFailureProps; validation?: Validation })
+  | (BaseSlide & { component: 'CoinRecurrence'; props: CoinRecurrenceProps; validation?: Validation })
+  | (BaseSlide & { component: 'RichText'; props: RichTextProps; validation?: Validation })
+  | (BaseSlide & { component: 'CodeViewer'; props: CodeViewerProps; validation?: Validation });
 
 /** A learner's answer for a slide, shape depends on the widget. */
 export type SlideAnswer =

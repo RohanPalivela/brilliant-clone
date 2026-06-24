@@ -65,7 +65,7 @@ export function CodeBlanks({
 
   return (
     <div className="w-full">
-      <div className="mx-auto max-w-xl overflow-x-auto rounded-xl bg-cta px-5 py-4 text-left font-mono text-sm leading-7 text-white">
+      <div className="mx-auto max-w-xl overflow-x-auto rounded-xl border border-code-border bg-code-bg px-5 py-4 text-left font-mono text-sm leading-7 text-code-text">
         {config.codeLines.map((line, li) => (
           <div key={li} className="whitespace-pre">
             {line.length === 0 ? (

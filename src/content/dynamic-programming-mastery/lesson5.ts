@@ -19,6 +19,7 @@ export const lesson5: Lesson = {
         body: 'Coin change is one of the most well-known problems in computer science: given a set of coin values, can you combine them to make a target amount exactly?',
         emphasis:
           'It looks brand new, but it maps cleanly onto the staircase. Each coin is just another way to step toward the total, and asking whether an amount can be made is the same as asking whether a step can be reached.',
+        bodyFirst: true,
       },
       validation: { type: 'none' },
     },

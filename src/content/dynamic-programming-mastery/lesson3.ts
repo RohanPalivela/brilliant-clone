@@ -19,6 +19,7 @@ export const lesson3: Lesson = {
         body: 'New rule: each move may climb 2, 3, or 4 steps. Nothing about our approach changes — a step is still reachable only if some step one jump below it is reachable.',
         emphasis:
           'All that changes is which earlier steps you look back at. Swap the jump set, keep the method.',
+        bodyFirst: true,
       },
       validation: { type: 'none' },
     },
@@ -67,7 +68,7 @@ export const lesson3: Lesson = {
         goalIndex: 7,
         jumpSizes: [2, 3, 4],
         prompt:
-          'Now you do step 7 (highlighted, not selectable). Drag the window to cover exactly the earlier steps you’d transition from to decide it, with jumps of 2, 3, or 4.',
+          'Now you do step 7 (highlighted, not selectable). Drag the window to cover exactly the earlier steps you’d transition from to decide it, with jumps of size 2, 3, or 4.',
       },
       validation: { type: 'range', correctIndices: [3, 4, 5] },
       hint: 'Step 7 depends on 7 − 2, 7 − 3, and 7 − 4.',

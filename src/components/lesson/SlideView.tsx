@@ -9,7 +9,11 @@ import { CodeBlanks } from '../interactive/CodeBlanks';
 import { KnapsackPicker } from '../interactive/KnapsackPicker';
 import { DPTable } from '../interactive/DPTable';
 import { SubproblemIsolation } from '../interactive/SubproblemIsolation';
+import { GreedyFailure } from '../interactive/GreedyFailure';
+import { CoinRecurrence } from '../interactive/CoinRecurrence';
 import { ForwardExplosion } from '../interactive/ForwardExplosion';
+import { FibonacciSequence } from '../interactive/FibonacciSequence';
+import { CodeViewer } from '../interactive/CodeViewer';
 
 interface SlideViewProps {
   slide: Slide;
@@ -25,7 +29,7 @@ function renderInline(text: string, keyPrefix: string) {
       return (
         <code
           key={`${keyPrefix}-${i}`}
-          className="mx-0.5 rounded bg-cta px-1.5 py-0.5 align-middle font-mono text-[0.85em] text-white"
+          className="mx-0.5 rounded border border-code-border bg-code-bg px-1.5 py-0.5 align-middle font-mono text-[0.85em] text-code-text"
         >
           {part.slice(1, -1)}
         </code>
@@ -164,11 +168,37 @@ export function SlideView({ slide, answer, onAnswer, showMistakes }: SlideViewPr
         </div>
       );
 
+    case 'GreedyFailure':
+      return (
+        <div>
+          <Prompt text={slide.props.prompt} />
+          <GreedyFailure config={slide.props} />
+        </div>
+      );
+
+    case 'CoinRecurrence':
+      return (
+        <div>
+          <Prompt text={slide.props.prompt} />
+          <CoinRecurrence config={slide.props} />
+        </div>
+      );
+
+    case 'CodeViewer':
+      return (
+        <div>
+          <Prompt text={slide.props.prompt} />
+          <CodeViewer config={slide.props} />
+        </div>
+      );
+
     case 'RichText': {
       const { heading, body, emphasis, bullets, pseudocode, visual, bodyFirst } =
         slide.props;
       const gridConfig =
-        visual && visual.component !== 'ForwardExplosion'
+        visual &&
+        visual.component !== 'ForwardExplosion' &&
+        visual.component !== 'FibonacciSequence'
           ? {
               steps: visual.steps ?? 0,
               jumpSizes: visual.jumpSizes,
@@ -222,6 +252,17 @@ export function SlideView({ slide, answer, onAnswer, showMistakes }: SlideViewPr
               />
             </div>
           )}
+          {visual?.component === 'FibonacciSequence' && (
+            <div className="mt-6">
+              <FibonacciSequence
+                count={visual.count}
+                seeds={visual.seeds}
+                label={visual.label}
+                startIndex={visual.startIndex}
+                caption={visual.caption}
+              />
+            </div>
+          )}
           {gridConfig && (
             <div className="mt-6">
               {visual!.component === 'ArrayRow' ? (
@@ -232,7 +273,7 @@ export function SlideView({ slide, answer, onAnswer, showMistakes }: SlideViewPr
             </div>
           )}
           {pseudocode && (
-            <pre className="mt-5 overflow-x-auto rounded-xl bg-cta px-5 py-4 text-left font-mono text-sm leading-relaxed text-white">
+            <pre className="mt-5 overflow-x-auto rounded-xl border border-code-border bg-code-bg px-5 py-4 text-left font-mono text-sm leading-relaxed text-code-text">
               <code>{pseudocode}</code>
             </pre>
           )}
