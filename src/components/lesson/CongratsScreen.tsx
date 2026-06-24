@@ -10,7 +10,6 @@ interface CongratsScreenProps {
   lesson: Lesson;
   problemsSolved: number;
   percentComplete: number;
-  streakExtended: boolean;
   newStreak: number;
   nextLesson?: Lesson;
   onNextLesson: () => void;
@@ -22,7 +21,6 @@ export function CongratsScreen({
   lesson,
   problemsSolved,
   percentComplete,
-  streakExtended,
   newStreak,
   nextLesson,
   onNextLesson,
@@ -51,7 +49,7 @@ export function CongratsScreen({
         <h1 className="text-3xl font-bold text-ink">Lesson complete!</h1>
         <p className="mt-2 text-muted">{lesson.title}</p>
 
-        {streakExtended && (
+        {newStreak >= 1 && (
           <div className="mx-auto mt-5 inline-flex items-center gap-2 rounded-full bg-flame/10 px-4 py-2 font-bold text-flame">
             <Flame className="h-5 w-5" aria-hidden="true" />
             {newStreak} day streak!

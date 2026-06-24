@@ -14,7 +14,7 @@ test('a learner can complete Lesson 1 end to end', async ({ page }) => {
   await expect(
     page.getByRole('heading', { name: 'Lesson complete!' }),
   ).toBeVisible();
-  await expect(page.getByText('20%')).toBeVisible(); // 1 of 5 lessons
+  await expect(page.getByText('17%')).toBeVisible(); // 1 of 6 lessons
   await expect(page.getByRole('button', { name: 'Next lesson' })).toBeVisible();
 });
 

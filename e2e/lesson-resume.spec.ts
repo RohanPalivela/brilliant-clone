@@ -7,22 +7,25 @@ test('resumes a lesson at the furthest slide reached after reload', async ({
   await signUp(page);
   await page.goto(LESSON1_URL);
 
-  // Advance past the intro and the multiple-choice prompt onto the staircase.
-  await page.getByRole('button', { name: 'Continue' }).click();
-  await page.getByRole('radio', { name: /Not reachable/ }).click();
+  // Advance through the five read-only intro slides, answer the MCQ, and land on
+  // the guided staircase checkpoint (slide 7).
+  for (let i = 0; i < 5; i++) {
+    await page.getByRole('button', { name: 'Continue' }).click();
+  }
+  await page.getByRole('radio', { name: /step 4/ }).click();
   await page.getByRole('button', { name: 'Check' }).click();
   await page.getByRole('button', { name: 'Continue' }).click();
 
-  // We're now on slide 3 (the staircase). Confirm, then wait out the 500ms
+  // We're now on the guided checkpoint. Confirm, then wait out the 500ms
   // debounced save before reloading.
-  await expect(page.getByText(/Mark every step from 0 to 11/)).toBeVisible();
+  await expect(page.getByText(/Let.s warm up together/)).toBeVisible();
   await page.waitForTimeout(900);
 
   await page.reload();
 
-  // The player should resume on the staircase slide, not slide 1.
-  await expect(page.getByText(/Mark every step from 0 to 11/)).toBeVisible();
+  // The player should resume on the checkpoint slide, not back at the intro.
+  await expect(page.getByText(/Let.s warm up together/)).toBeVisible();
   await expect(
-    page.getByRole('heading', { name: 'A staircase you climb in jumps' }),
+    page.getByText(/You start on the ground/),
   ).not.toBeVisible();
 });

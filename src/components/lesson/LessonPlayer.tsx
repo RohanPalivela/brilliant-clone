@@ -216,7 +216,6 @@ export function LessonPlayer({
         lesson={lesson}
         problemsSolved={problemsSolved}
         percentComplete={result.percentComplete}
-        streakExtended={result.streakExtended}
         newStreak={result.newStreak}
         nextLesson={nextLesson}
         onNextLesson={goNextLesson}
