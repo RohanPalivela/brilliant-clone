@@ -13,6 +13,7 @@ import {
   ensureUserProfile,
   subscribeUserProfile,
   deleteUserData,
+  updateDisplayName,
 } from '../data/progressService';
 import type { UserProfile } from '../types/progress';
 import type { User } from 'firebase/auth';
@@ -53,8 +54,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signUp: AuthState['signUp'] = async (email, password, displayName) => {
     const cred = await createUserWithEmailAndPassword(auth, email, password);
-    if (displayName) await updateProfile(cred.user, { displayName });
+    const chosenName = displayName?.trim();
+    if (chosenName) await updateProfile(cred.user, { displayName: chosenName });
     await ensureUserProfile(cred.user);
+    // The auth-state listener may have already created the profile doc with an
+    // email-derived name (it fires before updateProfile resolves), so persist
+    // the chosen display name explicitly to make sure it wins that race.
+    if (chosenName) await updateDisplayName(cred.user.uid, chosenName);
   };
 
   const signIn: AuthState['signIn'] = async (email, password) => {
