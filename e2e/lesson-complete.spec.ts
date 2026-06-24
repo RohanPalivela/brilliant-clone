@@ -5,10 +5,8 @@ test('a learner can complete Lesson 1 end to end', async ({ page }) => {
   await signUp(page);
   await page.goto(LESSON1_URL);
 
-  // The player opens on the intro slide.
-  await expect(
-    page.getByRole('heading', { name: 'A staircase you climb in jumps' }),
-  ).toBeVisible();
+  // The player opens on the intro slide; the lesson title is in the header bar.
+  await expect(page.getByText('The Staircase Problem')).toBeVisible();
 
   await completeLesson1(page);
 
@@ -24,19 +22,20 @@ test('a wrong staircase keeps the learner on the checkpoint', async ({ page }) =
   await signUp(page);
   await page.goto(LESSON1_URL);
 
-  // Advance to the staircase checkpoint.
-  await page.getByRole('button', { name: 'Continue' }).click();
-  await page.getByRole('radio', { name: /Not reachable/ }).click();
+  // Advance through the five read-only intro slides to the MCQ.
+  for (let i = 0; i < 5; i++) {
+    await page.getByRole('button', { name: 'Continue' }).click();
+  }
+  // Answer the MCQ correctly, then advance to the guided staircase checkpoint.
+  await page.getByRole('radio', { name: /step 4/ }).click();
   await page.getByRole('button', { name: 'Check' }).click();
   await page.getByRole('button', { name: 'Continue' }).click();
 
-  // Mark only step 1 (which is actually a dead-end) and check — this is wrong.
-  await page.locator('[data-cell-index="1"]').click();
+  // Steps 0..6 are locked correct. Mark step 7 (a dead end) as reachable —
+  // that's wrong — and check.
+  await page.locator('[data-cell-index="7"]').click();
   await page.getByRole('button', { name: 'Check' }).click();
 
-  await expect(page.getByText(/Start at step 0/)).toBeVisible();
-  // Still gated: no Continue button yet.
-  await expect(
-    page.getByRole('button', { name: 'Check' }),
-  ).toBeVisible();
+  // Still gated on the checkpoint: the Check button remains.
+  await expect(page.getByRole('button', { name: 'Check' })).toBeVisible();
 });

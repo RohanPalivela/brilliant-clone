@@ -1,6 +1,7 @@
 import { Check } from 'lucide-react';
 import type { MultipleChoiceProps, SlideAnswer } from '../../types/content';
 import { cn } from '../../lib/cn';
+import { renderInline } from '../../lib/renderInline';
 
 interface Props {
   config: MultipleChoiceProps;
@@ -9,24 +10,6 @@ interface Props {
   /** After a wrong submit, mark which selected options were incorrect. */
   showMistakes?: boolean;
   correctIds?: string[];
-}
-
-// Turn `backtick` spans into highlighted chips so the concrete facts (steps,
-// arithmetic) stand out from the surrounding sentence.
-function renderInline(text: string, keyPrefix: string) {
-  return text.split(/(`[^`]+`)/g).map((part, i) => {
-    if (part.length >= 2 && part.startsWith('`') && part.endsWith('`')) {
-      return (
-        <code
-          key={`${keyPrefix}-${i}`}
-          className="mx-0.5 rounded border border-code-border bg-code-bg px-1.5 py-0.5 align-middle font-mono text-[0.85em] text-code-text"
-        >
-          {part.slice(1, -1)}
-        </code>
-      );
-    }
-    return <span key={`${keyPrefix}-${i}`}>{part}</span>;
-  });
 }
 
 // A question may be written as several lines (separated by \n): the supporting
@@ -116,7 +99,7 @@ export function MultipleChoice({
               >
                 {isSelected && <Check className="h-3.5 w-3.5" aria-hidden="true" />}
               </span>
-              {opt.label}
+              <span>{renderInline(opt.label, `opt-${opt.id}`)}</span>
             </button>
           );
         })}

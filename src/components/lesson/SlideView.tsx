@@ -14,29 +14,13 @@ import { CoinRecurrence } from '../interactive/CoinRecurrence';
 import { ForwardExplosion } from '../interactive/ForwardExplosion';
 import { FibonacciSequence } from '../interactive/FibonacciSequence';
 import { CodeViewer } from '../interactive/CodeViewer';
+import { renderInline } from '../../lib/renderInline';
 
 interface SlideViewProps {
   slide: Slide;
   answer: SlideAnswer;
   onAnswer: (answer: SlideAnswer) => void;
   showMistakes: boolean;
-}
-
-// Render a prompt line, turning `backtick` segments into code-styled accents.
-function renderInline(text: string, keyPrefix: string) {
-  return text.split(/(`[^`]+`)/g).map((part, i) => {
-    if (part.length >= 2 && part.startsWith('`') && part.endsWith('`')) {
-      return (
-        <code
-          key={`${keyPrefix}-${i}`}
-          className="mx-0.5 rounded border border-code-border bg-code-bg px-1.5 py-0.5 align-middle font-mono text-[0.85em] text-code-text"
-        >
-          {part.slice(1, -1)}
-        </code>
-      );
-    }
-    return <span key={`${keyPrefix}-${i}`}>{part}</span>;
-  });
 }
 
 // Each newline in the prompt becomes its own spaced line.
@@ -206,6 +190,9 @@ export function SlideView({ slide, answer, onAnswer, showMistakes }: SlideViewPr
               showSolution: true,
               highlightIndices: visual.highlightIndices,
               display: visual.display,
+              showArrows: visual.showArrows,
+              arrowTargets: visual.arrowTargets,
+              loop: visual.loop,
             }
           : null;
       const noop = () => {};

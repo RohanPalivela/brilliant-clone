@@ -2,9 +2,9 @@ import { useEffect, useState } from 'react';
 import { useAuth } from './useAuth';
 import {
   subscribeCourseProgress,
-  getAllLessonProgress,
+  subscribeAllCourseProgress,
 } from '../data/progressService';
-import type { CourseProgress, LessonProgress } from '../types/progress';
+import type { CourseProgress } from '../types/progress';
 
 /** Live course-level progress for the signed-in user. */
 export function useCourseProgress(courseId: string) {
@@ -29,31 +29,25 @@ export function useCourseProgress(courseId: string) {
   return { progress, loading };
 }
 
-/** One-shot fetch of all lesson progress (used by the course detail path).
- *  `refreshKey` lets callers re-fetch after returning from a lesson. */
-export function useAllLessonProgress(refreshKey: unknown = 0) {
+/** Live map of every course the signed-in user has started, keyed by courseId. */
+export function useAllCourseProgress() {
   const { user } = useAuth();
-  const [byLesson, setByLesson] = useState<Record<string, LessonProgress>>({});
+  const [byCourse, setByCourse] = useState<Record<string, CourseProgress>>({});
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    let cancelled = false;
     if (!user) {
-      setByLesson({});
+      setByCourse({});
       setLoading(false);
       return;
     }
     setLoading(true);
-    getAllLessonProgress(user.uid).then((map) => {
-      if (!cancelled) {
-        setByLesson(map);
-        setLoading(false);
-      }
+    const unsub = subscribeAllCourseProgress(user.uid, (map) => {
+      setByCourse(map);
+      setLoading(false);
     });
-    return () => {
-      cancelled = true;
-    };
-  }, [user, refreshKey]);
+    return unsub;
+  }, [user]);
 
-  return { byLesson, loading };
+  return { byCourse, loading };
 }

@@ -55,7 +55,7 @@ export async function ensureUserProfile(user: User): Promise<UserProfile> {
   return profile;
 }
 
-export async function getUserProfile(uid: string): Promise<UserProfile | null> {
+async function getUserProfile(uid: string): Promise<UserProfile | null> {
   const snap = await getDoc(userRef(uid));
   return snap.exists() ? (snap.data() as UserProfile) : null;
 }
@@ -134,7 +134,7 @@ export async function resetCourseProgress(
 // Course progress
 // ---------------------------------------------------------------------------
 
-export async function getCourseProgress(
+async function getCourseProgress(
   uid: string,
   courseId: string,
 ): Promise<CourseProgress | null> {
@@ -152,16 +152,19 @@ export function subscribeCourseProgress(
   );
 }
 
-export async function getAllLessonProgress(
+/** Live map of every course the user has started, keyed by courseId. */
+export function subscribeAllCourseProgress(
   uid: string,
-): Promise<Record<string, LessonProgress>> {
-  const snaps = await getDocs(collection(db, 'users', uid, 'lessonProgress'));
-  const out: Record<string, LessonProgress> = {};
-  snaps.forEach((s) => {
-    const lp = s.data() as LessonProgress;
-    out[lp.lessonId] = lp;
+  cb: (byCourse: Record<string, CourseProgress>) => void,
+): () => void {
+  return onSnapshot(collection(db, 'users', uid, 'courseProgress'), (snaps) => {
+    const out: Record<string, CourseProgress> = {};
+    snaps.forEach((s) => {
+      const cp = s.data() as CourseProgress;
+      out[cp.courseId] = cp;
+    });
+    cb(out);
   });
-  return out;
 }
 
 export async function getLessonProgress(

@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom';
 import { Flame, ArrowRight, PlayCircle } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 import { useStreak } from '../hooks/useStreak';
-import { useCourseProgress } from '../hooks/useProgress';
+import { useAllCourseProgress } from '../hooks/useProgress';
 import { courses, getCourse, firstIncompleteLesson } from '../content';
 import { resolveDisplayName } from '../lib/name';
 import { Card } from '../components/ui/Card';
@@ -22,15 +22,32 @@ function greeting(): string {
 export function HomePage() {
   const { profile } = useAuth();
   const streak = useStreak();
-  const course = getCourse(FEATURED_COURSE_ID)!;
-  const { progress } = useCourseProgress(FEATURED_COURSE_ID);
+  const { byCourse } = useAllCourseProgress();
 
+  // "Your courses" = only courses the learner has actually started, ordered by
+  // most recently touched so the active one floats to the top.
+  const startedCourses = courses
+    .filter((c) => byCourse[c.id])
+    .sort((a, b) => (byCourse[b.id].updatedAt ?? 0) - (byCourse[a.id].updatedAt ?? 0));
+
+  // The hero resumes the most recently touched course; new learners fall back
+  // to the featured course as a suggested starting point.
+  const started = startedCourses.length > 0;
+  const course = started ? startedCourses[0] : getCourse(FEATURED_COURSE_ID)!;
+  const progress = byCourse[course.id] ?? null;
   const completed = progress?.completedLessonIds ?? [];
-  const started = !!progress;
   const percent = progress?.percentComplete ?? 0;
+  // Honor the saved lesson only while it's still in progress. Once it's
+  // completed (e.g. the learner just finished it), `currentLessonId` still
+  // points at it — so resume at the first incomplete lesson instead of
+  // replaying the finished one from the start.
+  const savedLesson = course.lessons.find(
+    (l) => l.id === progress?.currentLessonId,
+  );
   const currentLesson =
-    course.lessons.find((l) => l.id === progress?.currentLessonId) ??
-    firstIncompleteLesson(course, completed);
+    savedLesson && !completed.includes(savedLesson.id)
+      ? savedLesson
+      : firstIncompleteLesson(course, completed);
   const currentNumber = course.lessons.findIndex((l) => l.id === currentLesson.id) + 1;
   const name = profile
     ? resolveDisplayName({
@@ -112,22 +129,24 @@ export function HomePage() {
         </Card>
       )}
 
-      {/* Your courses */}
-      <section>
-        <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-muted">
-          Your courses
-        </h2>
-        <div className="grid gap-4 sm:grid-cols-2">
-          {courses.map((c) => (
-            <CourseCard
-              key={c.id}
-              course={c}
-              percentComplete={c.id === course.id ? percent : 0}
-              started={c.id === course.id ? started : false}
-            />
-          ))}
-        </div>
-      </section>
+      {/* Your courses — only what the learner has actually started */}
+      {startedCourses.length > 0 && (
+        <section>
+          <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-muted">
+            Your courses
+          </h2>
+          <div className="grid gap-4 sm:grid-cols-2">
+            {startedCourses.map((c) => (
+              <CourseCard
+                key={c.id}
+                course={c}
+                percentComplete={byCourse[c.id].percentComplete ?? 0}
+                started
+              />
+            ))}
+          </div>
+        </section>
+      )}
     </div>
   );
 }

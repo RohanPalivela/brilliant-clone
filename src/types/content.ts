@@ -76,6 +76,13 @@ export interface ArrayRowProps {
   display?: CellDisplay;
   /** Draw dependency arrows from a cell's look-backs (i−j) to it on hover/highlight. */
   showArrows?: boolean;
+  /** Always-on dependency arrows into these indices (i−j → i), independent of hover.
+   *  Used for read-only diagrams that demonstrate the look-backs. */
+  arrowTargets?: number[];
+  /** Play a hands-off looping reveal: verdicts appear index by index and the
+   *  `arrowTargets`' look-back arrows draw in as each target is reached, then it
+   *  restarts. Read-only diagram only. */
+  loop?: boolean;
   /** Caption above the row, e.g. "reachable[]" or "can_make[]". */
   name?: string;
 }
@@ -138,6 +145,12 @@ export interface RichTextVisual {
   jumpSizes: number[];
   /** Cells to keep highlighted on the read-only reveal grid. */
   highlightIndices?: number[];
+  /** Draw dependency arrows from a cell's look-backs (i−j) on hover/highlight. */
+  showArrows?: boolean;
+  /** Always-on look-back arrows into these indices on the reveal grid. */
+  arrowTargets?: number[];
+  /** Play the hands-off looping reveal on the grid (verdicts + arrows accrue). */
+  loop?: boolean;
   /** Show 0/1 instead of ✓/✗ glyphs on the reveal grid. */
   display?: CellDisplay;
   /** ForwardExplosion only: how many times the forward paths branch. */
@@ -285,6 +298,8 @@ export type DPTableProps =
       mode: 'reachability';
       steps: number;
       jumpSizes: number[];
+      /** Show 0/1 instead of ✓/✗ glyphs (to match the reachable[] array view). */
+      display?: CellDisplay;
       prompt?: string;
       caption?: string;
     }

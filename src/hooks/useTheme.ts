@@ -30,13 +30,5 @@ export function useTheme() {
     setThemeState(next);
   }, []);
 
-  const toggleTheme = useCallback(() => {
-    setThemeState((current) => {
-      const next = current === 'dark' ? 'light' : 'dark';
-      persistTheme(next);
-      return next;
-    });
-  }, []);
-
-  return { theme, setTheme, toggleTheme };
+  return { theme, setTheme };
 }

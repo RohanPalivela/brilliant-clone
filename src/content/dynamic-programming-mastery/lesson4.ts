@@ -10,9 +10,9 @@ const reachablePython = `def reachable_steps(n, jumps):
         for j in jumps:
             if i - j >= 0 and reachable[i - j]:
                 reachable[i] = True
-    return reachable`;
+    return reachable[n]`;
 
-const reachableJava = `boolean[] reachableSteps(int n, int[] jumps) {
+const reachableJava = `boolean reachableSteps(int n, int[] jumps) {
     boolean[] reachable = new boolean[n + 1];
     reachable[0] = true;
     for (int i = 1; i <= n; i++) {
@@ -22,10 +22,10 @@ const reachableJava = `boolean[] reachableSteps(int n, int[] jumps) {
             }
         }
     }
-    return reachable;
+    return reachable[n];
 }`;
 
-const reachableCpp = `std::vector<bool> reachable_steps(int n, std::vector<int>& jumps) {
+const reachableCpp = `bool reachable_steps(int n, std::vector<int>& jumps) {
     std::vector<bool> reachable(n + 1, false);
     reachable[0] = true;
     for (int i = 1; i <= n; i++) {
@@ -35,19 +35,21 @@ const reachableCpp = `std::vector<bool> reachable_steps(int n, std::vector<int>&
             }
         }
     }
-    return reachable;
+    return reachable[n];
 }`;
 
 // Lesson 4 — Name the pattern and turn the by-hand sweep into code.
-// We first ground the idea in a couple of build-from-smaller examples, then show
-// the finished loop (in three languages), let the learner complete it from
-// blanks, and finally name the bottom-up technique: tabulation.
+// Arc: reconnect to the reachability sweep you already did by hand → ground the
+// "build from smaller answers" idea (and separate the OR vs SUM operators so DP
+// doesn't get mistaken for "add the two cells before") → watch tabulation run →
+// name it → read the finished loop → prove you still own it by hand → write it
+// from blanks. See → name → write, just like lessons 5 and 6.
 export const lesson4: Lesson = {
   id: 'the-dp-mindset',
   courseId: 'dynamic-programming-mastery',
   title: 'The DP Mindset',
   order: 4,
-  estimatedMinutes: 12,
+  estimatedMinutes: 14,
   slides: [
     {
       id: 'm4-s1',
@@ -62,12 +64,33 @@ export const lesson4: Lesson = {
       validation: { type: 'none' },
     },
     {
+      id: 'm4-s1a',
+      type: 'explain',
+      component: 'ArrayRow',
+      props: {
+        steps: 11,
+        jumpSizes: [3, 5],
+        editable: false,
+        showSolution: true,
+        display: 'binary',
+        name: 'reachable[]',
+        highlightIndices: [6, 8, 11],
+        showArrows: true,
+        arrowTargets: [11],
+        prompt:
+          'Remember this? Jumps {3, 5}, eleven steps. You already swept this array by hand — `step 11` was reachable because `step 8` (11 − 3) or `step 6` (11 − 5) was.\nYou already did this by hand — now let’s name it and write it down as code.',
+      },
+      validation: { type: 'none' },
+    },
+    {
       id: 'm4-s1b',
       type: 'explain',
       component: 'RichText',
       props: {
         heading: 'Example: Fibonacci',
-        body: 'Each Fibonacci number is just the two before it added together: F(n) = F(n−1) + F(n−2). Start from 0 and 1, and every new term is built from answers you already have.',
+        body: 'The same build-from-smaller shape shows up far beyond the stairs. Each Fibonacci number is the two before it added together: F(n) = F(n−1) + F(n−2). Start from 0 and 1, and every new term is built from answers you already have.',
+        emphasis:
+          'Notice the combine step here is addition — you SUM the two earlier cells, not OR them.',
         visual: {
           component: 'FibonacciSequence',
           jumpSizes: [],
@@ -86,6 +109,8 @@ export const lesson4: Lesson = {
       props: {
         heading: 'Example: ways up the stairs',
         body: 'How many ways can you climb n stairs taking 1 or 2 at a time? Your last move was either a single or a double, so ways(n) = ways(n−1) + ways(n−2) — the same build-from-smaller shape wearing different clothes.',
+        emphasis:
+          'Counting ways also SUMS — you ADD the number of ways from each case, because every way through n−1 and every way through n−2 is its own distinct path.',
         visual: {
           component: 'FibonacciSequence',
           jumpSizes: [],
@@ -99,29 +124,75 @@ export const lesson4: Lesson = {
       validation: { type: 'none' },
     },
     {
+      id: 'm4-s1d',
+      type: 'explain',
+      component: 'RichText',
+      props: {
+        heading: 'Same table, different operator',
+        body: 'It’s tempting to conclude “DP just means add the two previous cells.” It doesn’t. Reachability and counting-ways fill the very same table shape — each cell built from smaller cells — but they combine those smaller answers differently.',
+        bullets: [
+          'Reachability asks “can I get here?” → combine look-backs with OR: reachable if ANY predecessor is reachable.',
+          'Fibonacci and counting ways ask “how many?” → combine with SUM: ADD the counts from each case.',
+        ],
+        emphasis:
+          'The shape is always the same — build each answer from smaller ones. Only the operator changes with the question (OR, SUM, and later min or max).',
+        bodyFirst: true,
+      },
+      validation: { type: 'none' },
+    },
+    {
       id: 'm4-s2',
-      type: 'checkpoint',
+      type: 'prompt',
       component: 'MultipleChoice',
       props: {
         question:
-          'Select every problem that is DP-shaped (its answer is built from smaller subproblems).',
-        multiSelect: true,
+          'Back to the stairs with jumps {3, 5}. Which earlier answers decide whether `step 11` is reachable?',
         options: [
-          { id: 'lcs', label: 'Longest common subsequence of two strings' },
-          { id: 'editdist', label: 'Fewest edits to turn one word into another' },
-          { id: 'gridpaths', label: 'Count the paths through a grid, moving only right or down' },
-          { id: 'binsearch', label: 'Find a value in a sorted list' },
-          { id: 'reverse', label: 'Reverse a string' },
-          { id: 'maxlist', label: 'Find the largest number in a list' },
+          { id: 'eightsix', label: '`step 8` and `step 6` — that’s 11 − 3 and 11 − 5' },
+          { id: 'threefive', label: '`step 3` and `step 5` — the jump sizes themselves' },
+          { id: 'tenfive', label: '`step 10` and `step 5`' },
+          { id: 'all', label: 'Every step from 0 to 10' },
         ],
       },
-      validation: {
-        type: 'multipleChoice',
-        correctIds: ['lcs', 'editdist', 'gridpaths'],
-      },
-      hint: 'Which answers reuse the answers to smaller versions of the same problem?',
+      validation: { type: 'multipleChoice', correctIds: ['eightsix'] },
+      hint: 'Subtract each jump from 11, exactly like the by-hand sweep at the top of this lesson.',
       explanationOnWrong:
-        'Longest common subsequence, edit distance, and grid path-counting each build their answer from smaller subproblems. Searching a sorted list, reversing a string, and scanning for a max just walk the data once — there are no sub-answers to reuse.',
+        'You land on 11 from one jump below it: 11 − 3 = 8 and 11 − 5 = 6. If `step 8` OR `step 6` is reachable, so is `step 11`. The jump sizes themselves aren’t the cells you read.',
+    },
+    {
+      id: 'm4-s5',
+      type: 'explore',
+      component: 'DPTable',
+      props: {
+        mode: 'reachability',
+        steps: 11,
+        jumpSizes: [3, 5],
+        display: 'binary',
+        prompt:
+          'Now watch the whole sweep happen on its own. The base case (`step 0`) is filled first, then each cell is decided left to right by OR-ing the earlier entries it can jump from — the highlighted cells are exactly the `i − j` look-backs you just named.',
+        caption: 'Bottom-up, one pass, no cell revisited — that’s the whole technique.',
+      },
+      validation: { type: 'none' },
+    },
+    {
+      id: 'm4-s4b',
+      type: 'explain',
+      component: 'RichText',
+      props: {
+        heading: 'The name for this: tabulation',
+        bodyFirst: true,
+        body: 'You just watched a table fill from the bottom up — every entry computed once, in order, each one reading answers that already sit in earlier cells. That approach has a name.',
+        emphasis:
+          'Tabulation: build a table once, bottom-up, with each answer read from earlier subproblems.',
+        bullets: [
+          'Base case first — seed what you know outright (the ground, reachable[0] = True).',
+          'Iterate over states — walk every step from small to large.',
+          'Read earlier answers — each entry only looks back at cells already filled.',
+          'No subproblem is ever solved twice.',
+          'There’s a mirror-image approach, top-down memoization, that starts at the goal and caches as it recurses — we’ll stick with tabulation here.',
+        ],
+      },
+      validation: { type: 'none' },
     },
     {
       id: 'm4-s3',
@@ -129,7 +200,7 @@ export const lesson4: Lesson = {
       component: 'CodeViewer',
       props: {
         prompt:
-          'Here’s that by-hand sweep written as a real function — one generalized loop that works for any jump set, not just `[3, 5]`. Start every step False, mark the ground (index `0`) True, then for each step try each jump: if the step you’d come from is reachable, so is this one. Flip between languages — the logic is identical.',
+          'Here’s that exact sweep written as a real function — one generalized loop that works for any jump set, not just `[3, 5]`. Start every step False, mark the ground (index `0`) True, then for each step try each jump: if the step you’d come from is reachable, so is this one. Flip between languages — the logic is identical.',
         filename: 'reachable_steps',
         tabs: [
           { id: 'py', label: 'Python', language: 'py', code: reachablePython },
@@ -140,12 +211,32 @@ export const lesson4: Lesson = {
       validation: { type: 'none' },
     },
     {
+      id: 'm4-s3b',
+      type: 'checkpoint',
+      component: 'ArrayRow',
+      props: {
+        steps: 11,
+        jumpSizes: [3, 5],
+        target: 11,
+        editable: true,
+        display: 'binary',
+        name: 'reachable[]',
+        prefillUpTo: 6,
+        prompt:
+          'One last hands-on check before you write the loop yourself. Steps 0–6 are already filled and locked. Finish `reachable[]` for jumps {3, 5} up to step 11.\nFor each remaining step, set it to 1 if `step − 3` or `step − 5` is reachable. Tap a cell to set 1, tap again for 0.',
+      },
+      validation: { type: 'reachability', jumpSizes: [3, 5], steps: 11, target: 11 },
+      hint: 'Work left to right from step 7. Each step reads reachable[step − 3] and reachable[step − 5]; if either is 1, this step is 1.',
+      explanationOnWrong:
+        'Sweep left to right: a step is reachable only if (step − 3) or (step − 5) is already reachable. For example step 11 reads step 8 and step 6 — same OR you’ve done by hand all lesson.',
+    },
+    {
       id: 'm4-s4',
       type: 'checkpoint',
       component: 'CodeBlanks',
       props: {
         prompt:
-          'Now you complete it. Drag the right pieces into the blanks to finish the same reachability loop.',
+          'Now you write it. Drag the right pieces into the blanks to finish the same reachability loop.',
         codeLines: [
           [{ type: 'text', value: 'reachable = [False] * (n + 1)' }],
           [
@@ -184,46 +275,12 @@ export const lesson4: Lesson = {
         'reachable[0] is the ground (True). You check the step you’d come from, reachable[i − j], and when it’s reachable you set reachable[i] = True.',
     },
     {
-      id: 'm4-s4b',
-      type: 'explain',
-      component: 'RichText',
-      props: {
-        heading: 'The name for this: tabulation',
-        bodyFirst: true,
-        body: 'You just filled a table from the bottom up — every entry computed once, in order, each one reading answers that already sit in earlier cells. That approach has a name.',
-        emphasis:
-          'Tabulation: build a table once, bottom-up, with each answer read from earlier subproblems.',
-        bullets: [
-          'Base case first — seed what you know outright (the ground, reachable[0] = True).',
-          'Iterate over states — walk every step from small to large.',
-          'Read earlier answers — each entry only looks back at cells already filled.',
-          'No subproblem is ever solved twice.',
-          'Its mirror image is top-down memoization: start at the goal, recurse, and cache answers. Same subproblems — opposite direction.',
-        ],
-      },
-      validation: { type: 'none' },
-    },
-    {
-      id: 'm4-s5',
-      type: 'explore',
-      component: 'DPTable',
-      props: {
-        mode: 'reachability',
-        steps: 11,
-        jumpSizes: [3, 5],
-        prompt:
-          'Watch tabulation happen. The base case (step `0`) is filled first, then each cell is decided left to right by reading the earlier entries it can jump from — the highlighted cells are exactly the `i - j` look-backs.',
-        caption: 'Bottom-up, one pass, no cell revisited — that’s the whole technique.',
-      },
-      validation: { type: 'none' },
-    },
-    {
       id: 'm4-s6',
       type: 'celebrate',
       component: 'RichText',
       props: {
         heading: 'You think in DP now',
-        body: 'You discovered reachability, stored it in an array, generalized the rule, wrote the loop, and learned its name — tabulation. Next, we’ll meet the very same pattern wearing a disguise: making change with coins.',
+        body: 'You reconnected the by-hand sweep, separated OR from SUM, watched the table fill, named the technique — tabulation — and wrote the loop. Next, we’ll meet the very same pattern wearing a disguise: making change with coins.',
       },
       validation: { type: 'none' },
     },

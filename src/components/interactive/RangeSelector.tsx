@@ -75,8 +75,8 @@ export function RangeSelector({ config, answer, onAnswer }: Props) {
   return (
     <div className="w-full select-none">
       <p className="mb-6 text-center text-sm text-muted">
-        Window for{' '}
-        <span className="font-semibold text-ink">F({target})</span> · jumps{' '}
+        Look-backs for{' '}
+        <span className="font-semibold text-ink">step {target}</span> · jumps{' '}
         {jumpSizes.join(', ')}
       </p>
 

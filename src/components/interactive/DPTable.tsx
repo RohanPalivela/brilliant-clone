@@ -52,12 +52,15 @@ function coinGlyph(n: number): string {
 function buildPlan(config: DPTableProps): Plan {
   if (config.mode === 'reachability') {
     const { steps, jumpSizes } = config;
+    const binary = config.display === 'binary';
+    const trueGlyph = binary ? '1' : '✓';
+    const falseGlyph = binary ? '0' : '✗';
     const reach = computeReachable(steps, jumpSizes);
     const base = new Map<string, FillStep>();
     base.set(key(0, 0), {
       cell: { r: 0, c: 0 },
       sources: [],
-      label: '✓',
+      label: trueGlyph,
       tone: 'true',
       note: 'ground',
     });
@@ -67,7 +70,7 @@ function buildPlan(config: DPTableProps): Plan {
       fill.push({
         cell: { r: 0, c: i },
         sources,
-        label: reach[i] ? '✓' : '✗',
+        label: reach[i] ? trueGlyph : falseGlyph,
         tone: reach[i] ? 'true' : 'false',
       });
     }
