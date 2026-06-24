@@ -13,24 +13,26 @@ const dp = courses[0];
 
 describe('course lookups', () => {
   it('finds a course by id and returns undefined for unknown ids', () => {
-    expect(getCourse('dynamic-programming')).toBe(dp);
+    expect(getCourse('dynamic-programming-mastery')).toBe(dp);
     expect(getCourse('nope')).toBeUndefined();
   });
 
   it('finds a lesson within a course', () => {
-    const found = getLesson('dynamic-programming', 'reach-the-top');
-    expect(found?.lesson.title).toBe('Can You Reach the Top?');
+    const found = getLesson('dynamic-programming-mastery', 'reach-the-top');
+    expect(found?.lesson.title).toBe('The Staircase Problem');
     expect(found?.course).toBe(dp);
   });
 
   it('returns undefined for an unknown lesson or course', () => {
-    expect(getLesson('dynamic-programming', 'nope')).toBeUndefined();
+    expect(getLesson('dynamic-programming-mastery', 'nope')).toBeUndefined();
     expect(getLesson('nope', 'reach-the-top')).toBeUndefined();
   });
 
   it('finds a lesson by index', () => {
-    expect(getLessonByIndex('dynamic-programming', 0)?.id).toBe('reach-the-top');
-    expect(getLessonByIndex('dynamic-programming', 99)).toBeUndefined();
+    expect(getLessonByIndex('dynamic-programming-mastery', 0)?.id).toBe(
+      'reach-the-top',
+    );
+    expect(getLessonByIndex('dynamic-programming-mastery', 99)).toBeUndefined();
   });
 });
 
@@ -128,6 +130,38 @@ describe('content integrity', () => {
         for (const i of slide.validation.correctIndices) {
           expect(i).toBeGreaterThanOrEqual(min);
           expect(i).toBeLessThanOrEqual(selectableMax);
+        }
+      }
+    }
+  });
+
+  it('knapsack validations match their widget items and capacity', () => {
+    for (const slide of allSlides) {
+      if (
+        slide.component === 'KnapsackPicker' &&
+        slide.validation?.type === 'knapsack'
+      ) {
+        expect(slide.validation.capacity).toBe(slide.props.capacity);
+        expect(slide.validation.items).toEqual(slide.props.items);
+        // The optimum must actually be reachable within capacity.
+        const fits = slide.props.items.some((it) => it.weight <= slide.props.capacity);
+        expect(fits).toBe(true);
+      }
+    }
+  });
+
+  it('DPTable knapsack/coins configs are well-formed', () => {
+    for (const slide of allSlides) {
+      if (slide.component === 'DPTable') {
+        if (slide.props.mode === 'coins') {
+          expect(slide.props.amount).toBeGreaterThan(0);
+          expect(slide.props.coins.length).toBeGreaterThan(0);
+        } else if (slide.props.mode === 'knapsack') {
+          expect(slide.props.capacity).toBeGreaterThan(0);
+          expect(slide.props.items.length).toBeGreaterThan(0);
+        } else {
+          expect(slide.props.steps).toBeGreaterThan(0);
+          expect(slide.props.jumpSizes.length).toBeGreaterThan(0);
         }
       }
     }

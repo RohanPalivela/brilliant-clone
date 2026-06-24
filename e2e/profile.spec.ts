@@ -6,27 +6,31 @@ test('a learner can restart a course to clear their progress', async ({
 }) => {
   await signUp(page);
 
-  // Build up some progress to reset: finish the first lesson.
+  // Build up some progress to reset: finish the first lesson. Wait for the
+  // congrats screen so the completion write has fully landed in Firestore
+  // before we navigate away (otherwise the reload can abort it mid-flight).
   await page.goto(LESSON1_URL);
   await completeLesson1(page);
+  await expect(
+    page.getByRole('heading', { name: 'Lesson complete!' }),
+  ).toBeVisible();
 
-  // The profile shows the course as in progress and offers a restart.
-  await page.goto('/profile');
-  await expect(page.getByText(/% through\./)).toBeVisible();
+  // The course page now offers a restart now that there's non-zero progress.
+  await page.goto('/courses/dynamic-programming-mastery');
   const restart = page.getByRole('button', { name: 'Restart course' });
-  await expect(restart).toBeEnabled();
+  await expect(restart).toBeVisible();
 
   await restart.click();
   await page.getByRole('button', { name: 'Confirm restart' }).click();
 
-  // Progress is wiped: the copy flips back to the untouched state and the
-  // restart button disables because there's nothing left to reset.
-  await expect(
-    page.getByText("You haven't started this course yet."),
-  ).toBeVisible();
+  // Progress is wiped: with nothing left to reset the restart control
+  // disappears and the course returns to its untouched "Start course" state.
   await expect(
     page.getByRole('button', { name: 'Restart course' }),
-  ).toBeDisabled();
+  ).toHaveCount(0);
+  await expect(
+    page.getByRole('button', { name: 'Start course' }),
+  ).toBeVisible();
 });
 
 test('a learner can delete their profile and cannot sign back in', async ({

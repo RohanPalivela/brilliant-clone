@@ -1,7 +1,7 @@
 import type { Course, Lesson } from '../types/content';
-import { dynamicProgramming } from './dynamic-programming';
+import { dynamicProgrammingMastery } from './dynamic-programming-mastery';
 
-export const courses: Course[] = [dynamicProgramming];
+export const courses: Course[] = [dynamicProgrammingMastery];
 
 export function getCourse(courseId: string): Course | undefined {
   return courses.find((c) => c.id === courseId);

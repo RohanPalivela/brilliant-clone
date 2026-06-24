@@ -11,6 +11,51 @@ interface Props {
   correctIds?: string[];
 }
 
+// Turn `backtick` spans into highlighted chips so the concrete facts (steps,
+// arithmetic) stand out from the surrounding sentence.
+function renderInline(text: string, keyPrefix: string) {
+  return text.split(/(`[^`]+`)/g).map((part, i) => {
+    if (part.length >= 2 && part.startsWith('`') && part.endsWith('`')) {
+      return (
+        <code
+          key={`${keyPrefix}-${i}`}
+          className="mx-0.5 rounded bg-cta px-1.5 py-0.5 align-middle font-mono text-[0.85em] text-white"
+        >
+          {part.slice(1, -1)}
+        </code>
+      );
+    }
+    return <span key={`${keyPrefix}-${i}`}>{part}</span>;
+  });
+}
+
+// A question may be written as several lines (separated by \n): the supporting
+// facts in calm text, and the actual question (the line ending in "?") pulled
+// out as a bold prompt. This keeps dense questions from reading as one blur.
+function Question({ text }: { text: string }) {
+  const lines = text.split('\n').filter((l) => l.trim().length > 0);
+  return (
+    <div className="mx-auto mb-6 flex max-w-md flex-col gap-2.5">
+      {lines.map((line, i) => {
+        const isAsk = line.trim().endsWith('?');
+        return (
+          <p
+            key={i}
+            className={cn(
+              'leading-relaxed',
+              isAsk
+                ? 'text-lg font-bold text-ink'
+                : 'text-sm text-ink-soft',
+            )}
+          >
+            {renderInline(line, `q${i}`)}
+          </p>
+        );
+      })}
+    </div>
+  );
+}
+
 export function MultipleChoice({
   config,
   answer,
@@ -35,9 +80,7 @@ export function MultipleChoice({
 
   return (
     <fieldset className="w-full">
-      <legend className="mb-5 text-center text-lg font-semibold text-ink">
-        {config.question}
-      </legend>
+      <Question text={config.question} />
       <div className="mx-auto flex max-w-md flex-col gap-3">
         {config.options.map((opt) => {
           const isSelected = selected.includes(opt.id);

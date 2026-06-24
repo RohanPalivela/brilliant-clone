@@ -1,5 +1,13 @@
 import { describe, it, expect } from 'vitest';
-import { computeReachable, lookbackIndices } from './dp';
+import {
+  computeReachable,
+  lookbackIndices,
+  minCoinsTable,
+  knapsackTable,
+  knapsackOptimal,
+  UNREACHABLE,
+  type KnapsackItemLike,
+} from './dp';
 
 /** Indices i where reachable[i] is true. */
 function reachableSet(reachable: boolean[]): number[] {
@@ -69,5 +77,50 @@ describe('lookbackIndices', () => {
       const expected = lookbackIndices(i, [3, 5]).some((p) => reachable[p]);
       expect(reachable[i]).toBe(expected);
     }
+  });
+});
+
+describe('minCoinsTable', () => {
+  it('matches the Lesson 6 answer key (coins 1,3,4 / amount 6)', () => {
+    // 0,1,2,3,4,5,6 -> 0,1,2,1,1,2,2 (and 6 = 3+3, beating greedy 4+1+1)
+    expect(minCoinsTable([1, 3, 4], 6)).toEqual([0, 1, 2, 1, 1, 2, 2]);
+  });
+
+  it('uses fewest coins, not the greedy biggest-first count', () => {
+    // Greedy on {1,3,4} for 6 gives 4+1+1 = 3 coins; optimal is 3+3 = 2.
+    expect(minCoinsTable([1, 3, 4], 6)[6]).toBe(2);
+  });
+
+  it('marks amounts that cannot be made as UNREACHABLE', () => {
+    const table = minCoinsTable([3, 5], 11);
+    expect(table[0]).toBe(0);
+    expect(table[3]).toBe(1);
+    expect(table[11]).toBe(3); // 3+3+5
+    for (const dead of [1, 2, 4, 7]) {
+      expect(table[dead]).toBe(UNREACHABLE);
+    }
+  });
+});
+
+describe('knapsack', () => {
+  const items: KnapsackItemLike[] = [
+    { weight: 1, value: 6 }, // best value-per-weight (the greedy trap)
+    { weight: 2, value: 10 },
+    { weight: 3, value: 12 },
+  ];
+
+  it('matches the Lesson 7 optimum (capacity 5 -> 22, beating greedy-by-ratio 16)', () => {
+    expect(knapsackOptimal(items, 5)).toBe(22);
+  });
+
+  it('builds a table whose bottom-right cell is the optimum', () => {
+    const table = knapsackTable(items, 5);
+    expect(table).toHaveLength(items.length + 1);
+    expect(table[0]).toEqual([0, 0, 0, 0, 0, 0]); // no items -> no value
+    expect(table[items.length][5]).toBe(22);
+  });
+
+  it('returns 0 value when nothing fits', () => {
+    expect(knapsackOptimal([{ weight: 9, value: 99 }], 5)).toBe(0);
   });
 });

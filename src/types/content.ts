@@ -12,6 +12,8 @@ export type SlideType =
 export type ComponentType =
   | 'StairGrid'
   | 'ArrayRow'
+  | 'StairsToArray'
+  | 'StaircaseWalkthrough'
   | 'RangeSelector'
   | 'MultipleChoice'
   | 'CodeBlanks'
@@ -44,6 +46,13 @@ export interface StairGridProps {
   display?: CellDisplay;
   /** Draw dependency arrows from a cell's look-backs (i−j) to it on hover/highlight. */
   showArrows?: boolean;
+  /** Always-on dependency arrows into these steps (i−j → i), independent of hover.
+   *  Used for read-only diagrams that demonstrate the jumps. */
+  arrowTargets?: number[];
+  /** Play a hands-off looping reveal: verdicts appear step by step and the
+   *  `arrowTargets`' look-back arrows draw in as each target is reached, then it
+   *  restarts. Read-only diagram only. */
+  loop?: boolean;
 }
 
 export interface ArrayRowProps {
@@ -65,6 +74,34 @@ export interface ArrayRowProps {
   showArrows?: boolean;
   /** Caption above the row, e.g. "reachable[]" or "can_make[]". */
   name?: string;
+}
+
+/**
+ * Read-only "morph" visual: the staircase lies down to become a flat array of
+ * cells. Used at the start of the array lesson to make the stairs↔array mapping
+ * something the learner watches happen. Shows the solved reachability values.
+ */
+export interface StairsToArrayProps {
+  steps: number;
+  jumpSizes: number[];
+  prompt?: string;
+  /** Cells kept highlighted throughout the morph. */
+  highlightIndices?: number[];
+  /** Caption shown beneath the morph. */
+  caption?: string;
+}
+
+/**
+ * A self-paced worked example: the learner steps through the staircase one step
+ * at a time (Prev/Next or ← →). Each frame decides one step, highlights it, draws
+ * the look-back arrows into it, and narrates why it's reachable or not.
+ */
+export interface StaircaseWalkthroughProps {
+  steps: number;
+  jumpSizes: number[];
+  prompt?: string;
+  /** Caption shown beneath the stepper. */
+  caption?: string;
 }
 
 export interface RangeSelectorProps {
@@ -124,6 +161,9 @@ export interface RichTextProps {
   bullets?: string[];
   emphasis?: string;
   pseudocode?: string;
+  /** When true, render `body` before the highlighted `emphasis` (calm setup
+   *  first, punchy takeaway second). Defaults to emphasis-first. */
+  bodyFirst?: boolean;
   /** Optional read-only solved grid shown beneath the text (a visual reveal). */
   visual?: RichTextVisual;
 }
@@ -190,6 +230,8 @@ interface BaseSlide {
 export type Slide =
   | (BaseSlide & { component: 'StairGrid'; props: StairGridProps; validation?: Validation })
   | (BaseSlide & { component: 'ArrayRow'; props: ArrayRowProps; validation?: Validation })
+  | (BaseSlide & { component: 'StairsToArray'; props: StairsToArrayProps; validation?: Validation })
+  | (BaseSlide & { component: 'StaircaseWalkthrough'; props: StaircaseWalkthroughProps; validation?: Validation })
   | (BaseSlide & { component: 'RangeSelector'; props: RangeSelectorProps; validation?: Validation })
   | (BaseSlide & { component: 'MultipleChoice'; props: MultipleChoiceProps; validation?: Validation })
   | (BaseSlide & { component: 'CodeBlanks'; props: CodeBlanksProps; validation?: Validation })

@@ -49,25 +49,34 @@ export async function solveLesson1StairGrid(page: Page): Promise<void> {
  * Assumes the lesson player is already open on slide 1.
  */
 export async function completeLesson1(page: Page): Promise<void> {
-  // Slide 1 — intro (RichText)
+  // Slide 1 — problem + diagram (read-only StairGrid)
   await page.getByRole('button', { name: 'Continue' }).click();
 
-  // Slide 2 — multiple choice (step 7 is not reachable)
+  // Slide 2 — worked example (StaircaseWalkthrough stepper)
+  await page.getByRole('button', { name: 'Continue' }).click();
+
+  // Slide 3 — look backward, not forward (RichText)
+  await page.getByRole('button', { name: 'Continue' }).click();
+
+  // Slide 4 — multiple choice (step 7 is not reachable)
   await page.getByRole('radio', { name: /Not reachable/ }).click();
   await page.getByRole('button', { name: 'Check' }).click();
   await page.getByRole('button', { name: 'Continue' }).click();
 
-  // Slide 3 — fill the full staircase
+  // Slide 5 — fill the full staircase
   await solveLesson1StairGrid(page);
   await page.getByRole('button', { name: 'Check' }).click();
   await page.getByRole('button', { name: 'Continue' }).click();
 
-  // Slide 4 — reveal (RichText)
+  // Slide 6 — animated table (DPTable)
   await page.getByRole('button', { name: 'Continue' }).click();
 
-  // Slide 5 — celebrate (RichText) -> finish
+  // Slide 7 — reveal (RichText)
+  await page.getByRole('button', { name: 'Continue' }).click();
+
+  // Slide 8 — celebrate (RichText) -> finish
   await page.getByRole('button', { name: 'Finish lesson' }).click();
 }
 
 export const LESSON1_URL =
-  '/courses/dynamic-programming/lessons/reach-the-top';
+  '/courses/dynamic-programming-mastery/lessons/reach-the-top';

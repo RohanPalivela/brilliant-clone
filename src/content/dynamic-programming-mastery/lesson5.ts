@@ -1,18 +1,17 @@
 import type { Lesson } from '../../types/content';
 
-// Lesson 5 — Coin change, the staircase in disguise.
-// Insight: "can I make amount A from a set of coins?" is the exact same
-// recurrence as reachability. Jumps become coin values; the height becomes the
-// amount. Nothing else changes — same table, same loop, new vocabulary.
+// Lesson 5 — Coin change (feasibility), the staircase in disguise.
+// Teacher first works a small can_make[] array, then the learner fills the full
+// one, then completes the (identical-shaped) tabulation loop.
 export const lesson5: Lesson = {
   id: 'coin-change',
-  courseId: 'dynamic-programming',
+  courseId: 'dynamic-programming-mastery',
   title: 'Making Change',
   order: 5,
   estimatedMinutes: 10,
   slides: [
     {
-      id: 'l5-s1',
+      id: 'm5-s1',
       type: 'explain',
       component: 'RichText',
       props: {
@@ -24,7 +23,24 @@ export const lesson5: Lesson = {
       validation: { type: 'none' },
     },
     {
-      id: 'l5-s2',
+      id: 'm5-s2',
+      type: 'explain',
+      component: 'ArrayRow',
+      props: {
+        steps: 6,
+        jumpSizes: [3, 5],
+        editable: false,
+        showSolution: true,
+        display: 'binary',
+        name: 'can_make[]',
+        highlightIndices: [3, 5, 6],
+        prompt:
+          'Watch me build can_make[] for coins {3, 5}, just like the stairs.\ncan_make[0] = 1 — you can always make 0 with no coins.\ncan_make[3] = 1 (one 3-coin); can_make[5] = 1 (one 5-coin).\ncan_make[6]: 6 − 3 = 3 is makeable → can_make[6] = 1. Amounts 1, 2, 4 can’t be reached → 0.',
+      },
+      validation: { type: 'none' },
+    },
+    {
+      id: 'm5-s3',
       type: 'prompt',
       component: 'MultipleChoice',
       props: {
@@ -43,7 +59,7 @@ export const lesson5: Lesson = {
         'Identical to the stairs: 11 − 3 = 8 and 11 − 5 = 6. If either of those amounts is makeable, so is 11.',
     },
     {
-      id: 'l5-s3',
+      id: 'm5-s4',
       type: 'checkpoint',
       component: 'ArrayRow',
       props: {
@@ -54,7 +70,7 @@ export const lesson5: Lesson = {
         display: 'binary',
         name: 'can_make[]',
         prompt:
-          'Fill `can_make[]` for coins {3, 5}, amounts 0 to 11.\n`can_make[amount]` is 1 if `amount − 3` or `amount − 5` is makeable.',
+          'Your turn — fill `can_make[]` for coins {3, 5}, amounts 0 to 11.\nStart from can_make[0] = 1, then for each amount set it to 1 if `amount − 3` or `amount − 5` is makeable. Tap a cell to set 1, tap again for 0.',
       },
       validation: { type: 'reachability', jumpSizes: [3, 5], steps: 11, target: 11 },
       hint: 'can_make[0] = 1 (make nothing with no coins). Then each amount reads can_make[amount − 3] and can_make[amount − 5].',
@@ -62,7 +78,7 @@ export const lesson5: Lesson = {
         'Work left to right: an amount is makeable only if (amount − 3) or (amount − 5) is makeable. It’s the same table you built for the stairs.',
     },
     {
-      id: 'l5-s4',
+      id: 'm5-s5',
       type: 'checkpoint',
       component: 'CodeBlanks',
       props: {
@@ -106,12 +122,12 @@ export const lesson5: Lesson = {
         'can_make[0] is True. You read the smaller amount can_make[value − coin], and when it’s makeable you set can_make[value] = True.',
     },
     {
-      id: 'l5-s5',
+      id: 'm5-s6',
       type: 'celebrate',
       component: 'RichText',
       props: {
         heading: 'Same pattern, new problem',
-        body: 'Coin change was reachable all along. Once you spot the shape — answers built from smaller answers — the same table and loop solve a whole family of problems.',
+        body: 'Coin change was reachable all along. But “can you?” is only half the story — next we’ll ask the harder question every real problem cares about: what’s the *best* you can do?',
       },
       validation: { type: 'none' },
     },

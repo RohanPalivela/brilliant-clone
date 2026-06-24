@@ -31,9 +31,10 @@ This is the **Phase 1 MVP**: the full learn-by-doing experience with **no AI**. 
 ```
 src/
   content/            Bundled, typed lesson content (the "content model")
-    dynamic-programming/  course meta + lesson1..4
+    dynamic-programming-mastery/  course meta + lesson1..7
   components/
-    interactive/      StairGrid, ArrayRow, RangeSelector, MultipleChoice
+    interactive/      StairGrid, ArrayRow, StairsToArray, RangeSelector,
+                      MultipleChoice, CodeBlanks, KnapsackPicker, DPTable
     lesson/           LessonPlayer, SlideView, CongratsScreen
     layout/           AppShell, TopNav, RequireAuth
     ui/               Button, Card, ProgressBar, FeedbackBanner, LoadingScreen
@@ -106,9 +107,15 @@ Hosting serves the built `dist/` as a single-page app (see [`firebase.json`](fir
 
 **Deployed app:** _add your Hosting URL here after the first deploy._
 
-## Course: Dynamic Programming
+## Course: Mastering Dynamic Programming
+
+Each lesson follows a direct-instruction shape: set up the problem, watch a
+worked example (the teacher solves it first), then solve it yourself, then watch
+the algorithm run.
 
 1. **Can You Reach the Top?** — discover reachability bottom-up on a staircase (jumps of 3 or 5).
-2. **From Stairs to Arrays** — map the staircase onto a boolean `reachable[]` array.
+2. **From Stairs to Arrays** — watch the staircase lie down into a boolean `reachable[]` array.
 3. **Changing the Rules** — transfer the pattern to jumps of 2/3/4 and reason about the look-back window.
-4. **The DP Mindset** — name the pattern and bridge to a tabulation loop (capstone: jumps of 1/4/6).
+4. **The DP Mindset** — name the pattern and turn the by-hand sweep into a tabulation loop.
+5. **Making Change** — coin-change feasibility: the staircase in disguise.
+6. **Fewest Coins** — the leap from “can you?” to optimization (OR → min).

@@ -78,7 +78,9 @@ function buildPlan(config: DPTableProps): Plan {
       steps: fill,
       rowLabels: ['reachable'],
       colLabels: Array.from({ length: steps + 1 }, (_, i) => String(i)),
-      rule: `reachable[i] = OR of reachable[i − j] for jumps ${jumpSizes.join(', ')}`,
+      rule: `reachable[i] = ${jumpSizes
+        .map((j) => `reachable[i-${j}]`)
+        .join(' || ')}`,
       caption: config.caption,
     };
   }

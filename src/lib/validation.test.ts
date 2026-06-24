@@ -156,3 +156,43 @@ describe('validateAnswer — codeBlanks', () => {
     ).toBe(false);
   });
 });
+
+describe('validateAnswer — knapsack', () => {
+  const items = [
+    { id: 'emerald', label: 'Emerald', weight: 1, value: 6 },
+    { id: 'goblet', label: 'Goblet', weight: 2, value: 10 },
+    { id: 'crown', label: 'Crown', weight: 3, value: 12 },
+  ];
+  const validation: Validation = { type: 'knapsack', capacity: 5, items };
+
+  it('accepts a selection that fits and reaches the optimal value', () => {
+    expect(
+      validateAnswer(validation, {
+        kind: 'items',
+        selectedIds: ['goblet', 'crown'], // weight 5, value 22 = optimum
+      }),
+    ).toBe(true);
+  });
+
+  it('rejects the greedy-by-ratio pick that is under optimal', () => {
+    expect(
+      validateAnswer(validation, {
+        kind: 'items',
+        selectedIds: ['emerald', 'goblet'], // weight 3, value 16 < 22
+      }),
+    ).toBe(false);
+  });
+
+  it('rejects a selection that exceeds capacity', () => {
+    expect(
+      validateAnswer(validation, {
+        kind: 'items',
+        selectedIds: ['emerald', 'goblet', 'crown'], // weight 6 > 5
+      }),
+    ).toBe(false);
+  });
+
+  it('rejects an answer of the wrong kind', () => {
+    expect(validateAnswer(validation, { kind: 'none' })).toBe(false);
+  });
+});

@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Navigate, useNavigate, useParams } from 'react-router-dom';
 import {
   CheckCircle2,
@@ -9,6 +10,8 @@ import {
 } from 'lucide-react';
 import { getCourse, firstIncompleteLesson, isLessonUnlocked } from '../content';
 import { useCourseProgress } from '../hooks/useProgress';
+import { useAuth } from '../hooks/useAuth';
+import { resetCourseProgress } from '../data/progressService';
 import type { Lesson } from '../types/content';
 import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
@@ -20,8 +23,12 @@ type NodeState = 'completed' | 'in_progress' | 'not_started' | 'locked';
 export function CourseDetailPage() {
   const { courseId } = useParams();
   const navigate = useNavigate();
+  const { user } = useAuth();
   const course = courseId ? getCourse(courseId) : undefined;
   const { progress } = useCourseProgress(courseId ?? '');
+
+  const [confirmRestart, setConfirmRestart] = useState(false);
+  const [restarting, setRestarting] = useState(false);
 
   if (!course) return <Navigate to="/courses" replace />;
 
@@ -29,11 +36,23 @@ export function CourseDetailPage() {
   const currentLessonId = progress?.currentLessonId;
   const percent = progress?.percentComplete ?? 0;
   const completedCount = completedIds.length;
+  const canRestart = percent > 0;
   const minutesRemaining = course.lessons
     .filter((l) => !completedIds.includes(l.id))
     .reduce((sum, l) => sum + l.estimatedMinutes, 0);
 
   const nextLesson = firstIncompleteLesson(course, completedIds);
+
+  const restartCourse = async () => {
+    if (!user || !courseId) return;
+    setRestarting(true);
+    try {
+      await resetCourseProgress(user.uid, courseId);
+      setConfirmRestart(false);
+    } finally {
+      setRestarting(false);
+    }
+  };
 
   const stateOf = (lesson: Lesson): NodeState => {
     if (completedIds.includes(lesson.id)) return 'completed';
@@ -80,13 +99,46 @@ export function CourseDetailPage() {
             </div>
           </div>
 
-          <Button size="lg" className="mt-6" onClick={() => open(nextLesson)}>
-            {completedCount === 0
-              ? 'Start course'
-              : completedCount === course.lessons.length
-                ? 'Review course'
-                : 'Continue'}
-          </Button>
+          <div className="mt-6 flex flex-wrap items-center gap-3">
+            <Button size="lg" onClick={() => open(nextLesson)}>
+              {completedCount === 0
+                ? 'Start course'
+                : completedCount === course.lessons.length
+                  ? 'Review course'
+                  : 'Continue'}
+            </Button>
+
+            {canRestart &&
+              (confirmRestart ? (
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="text-sm text-muted">
+                    Clear your progress and start over?
+                  </span>
+                  <Button
+                    variant="secondary"
+                    onClick={() => setConfirmRestart(false)}
+                    disabled={restarting}
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    onClick={() => void restartCourse()}
+                    disabled={restarting}
+                  >
+                    <RotateCcw className="h-4 w-4" aria-hidden="true" />
+                    {restarting ? 'Restarting…' : 'Confirm restart'}
+                  </Button>
+                </div>
+              ) : (
+                <Button
+                  variant="secondary"
+                  onClick={() => setConfirmRestart(true)}
+                >
+                  <RotateCcw className="h-4 w-4" aria-hidden="true" />
+                  Restart course
+                </Button>
+              ))}
+          </div>
         </Card>
       </header>
 

@@ -1,9 +1,13 @@
 import type { Slide, SlideAnswer } from '../../types/content';
 import { StairGrid } from '../interactive/StairGrid';
 import { ArrayRow } from '../interactive/ArrayRow';
+import { StairsToArray } from '../interactive/StairsToArray';
+import { StaircaseWalkthrough } from '../interactive/StaircaseWalkthrough';
 import { RangeSelector } from '../interactive/RangeSelector';
 import { MultipleChoice } from '../interactive/MultipleChoice';
 import { CodeBlanks } from '../interactive/CodeBlanks';
+import { KnapsackPicker } from '../interactive/KnapsackPicker';
+import { DPTable } from '../interactive/DPTable';
 
 interface SlideViewProps {
   slide: Slide;
@@ -72,6 +76,22 @@ export function SlideView({ slide, answer, onAnswer, showMistakes }: SlideViewPr
         </div>
       );
 
+    case 'StairsToArray':
+      return (
+        <div>
+          <Prompt text={slide.props.prompt} />
+          <StairsToArray config={slide.props} />
+        </div>
+      );
+
+    case 'StaircaseWalkthrough':
+      return (
+        <div>
+          <Prompt text={slide.props.prompt} />
+          <StaircaseWalkthrough config={slide.props} />
+        </div>
+      );
+
     case 'RangeSelector':
       return (
         <div>
@@ -113,8 +133,30 @@ export function SlideView({ slide, answer, onAnswer, showMistakes }: SlideViewPr
         />
       );
 
+    case 'KnapsackPicker':
+      return (
+        <div>
+          <Prompt text={slide.props.prompt} />
+          <KnapsackPicker
+            config={slide.props}
+            answer={answer}
+            onAnswer={onAnswer}
+            showMistakes={showMistakes}
+          />
+        </div>
+      );
+
+    case 'DPTable':
+      return (
+        <div>
+          <Prompt text={slide.props.prompt} />
+          <DPTable config={slide.props} />
+        </div>
+      );
+
     case 'RichText': {
-      const { heading, body, emphasis, bullets, pseudocode, visual } = slide.props;
+      const { heading, body, emphasis, bullets, pseudocode, visual, bodyFirst } =
+        slide.props;
       const visualConfig = visual
         ? {
             steps: visual.steps,
@@ -126,18 +168,29 @@ export function SlideView({ slide, answer, onAnswer, showMistakes }: SlideViewPr
           }
         : null;
       const noop = () => {};
+      const bodyEl = body && (
+        <p className="text-base leading-relaxed text-ink-soft">{body}</p>
+      );
+      const emphasisEl = emphasis && (
+        <p className="mx-auto mb-4 max-w-md rounded-xl bg-brand-soft px-5 py-4 text-base font-semibold text-brand">
+          {emphasis}
+        </p>
+      );
       return (
         <div className="mx-auto max-w-lg text-center">
           {heading && (
             <h2 className="mb-4 text-2xl font-bold text-ink">{heading}</h2>
           )}
-          {emphasis && (
-            <p className="mx-auto mb-4 max-w-md rounded-xl bg-brand-soft px-5 py-4 text-base font-semibold text-brand">
-              {emphasis}
-            </p>
-          )}
-          {body && (
-            <p className="text-base leading-relaxed text-ink-soft">{body}</p>
+          {bodyFirst ? (
+            <>
+              {bodyEl && <div className="mb-4">{bodyEl}</div>}
+              {emphasisEl}
+            </>
+          ) : (
+            <>
+              {emphasisEl}
+              {bodyEl}
+            </>
           )}
           {bullets && bullets.length > 0 && (
             <ul className="mx-auto mt-4 flex max-w-md flex-col gap-2 text-left text-sm text-ink-soft">

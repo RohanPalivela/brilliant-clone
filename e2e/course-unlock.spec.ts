@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test';
 import { signUp, completeLesson1, LESSON1_URL } from './helpers';
 
-const COURSE_URL = '/courses/dynamic-programming';
+const COURSE_URL = '/courses/dynamic-programming-mastery';
 
 test('lesson 2 is locked until lesson 1 is completed', async ({ page }) => {
   await signUp(page);
@@ -21,6 +21,6 @@ test('lesson 2 is locked until lesson 1 is completed', async ({ page }) => {
 
   // Back on the course page, lesson 2 is now unlocked.
   await page.goto(COURSE_URL);
-  await expect(page.getByText('1 of 5 lessons completed')).toBeVisible();
+  await expect(page.getByText('1 of 7 lessons completed')).toBeVisible();
   await expect(page.locator('ol li button').nth(1)).toBeEnabled();
 });

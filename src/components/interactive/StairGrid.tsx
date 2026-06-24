@@ -45,6 +45,8 @@ export function StairGrid({
       lockedUpTo={config.prefillUpTo ?? 0}
       display={config.display ?? (variant === 'array' ? 'binary' : 'icon')}
       showArrows={config.showArrows}
+      arrowTargets={'arrowTargets' in config ? config.arrowTargets : undefined}
+      loop={'loop' in config ? config.loop : undefined}
       onChange={(next) => onAnswer({ kind: 'cells', marks: next })}
     />
   );

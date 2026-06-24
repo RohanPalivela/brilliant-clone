@@ -8,7 +8,6 @@ import {
   Check,
   Sun,
   Moon,
-  RotateCcw,
   Trash2,
   AlertTriangle,
 } from 'lucide-react';
@@ -16,26 +15,20 @@ import { useAuth } from '../hooks/useAuth';
 import { useStreak } from '../hooks/useStreak';
 import { useCourseProgress } from '../hooks/useProgress';
 import { useTheme } from '../hooks/useTheme';
-import {
-  updateDisplayName,
-  resetCourseProgress,
-} from '../data/progressService';
-import { getCourse } from '../content';
+import { updateDisplayName } from '../data/progressService';
 import { resolveDisplayName } from '../lib/name';
 import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { cn } from '../lib/cn';
 import type { Theme } from '../lib/theme';
 
-const RESTARTABLE_COURSE_ID = 'dynamic-programming';
+const TRACKED_COURSE_ID = 'dynamic-programming-mastery';
 
 export function ProfilePage() {
   const { user, profile, logout, deleteAccount } = useAuth();
   const streak = useStreak();
-  const { progress } = useCourseProgress(RESTARTABLE_COURSE_ID);
+  const { progress } = useCourseProgress(TRACKED_COURSE_ID);
   const { theme, setTheme } = useTheme();
-
-  const course = getCourse(RESTARTABLE_COURSE_ID);
 
   const personName = resolveDisplayName({
     displayName: profile?.displayName,
@@ -45,9 +38,6 @@ export function ProfilePage() {
   const [editing, setEditing] = useState(false);
   const [name, setName] = useState(personName);
 
-  const [confirmRestart, setConfirmRestart] = useState(false);
-  const [restarting, setRestarting] = useState(false);
-
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
@@ -56,22 +46,10 @@ export function ProfilePage() {
     progress && progress.percentComplete > 0 && progress.percentComplete < 100
       ? 1
       : 0;
-  const hasCourseProgress = (progress?.percentComplete ?? 0) > 0;
 
   const saveName = async () => {
     if (user && name.trim()) await updateDisplayName(user.uid, name.trim());
     setEditing(false);
-  };
-
-  const restartCourse = async () => {
-    if (!user) return;
-    setRestarting(true);
-    try {
-      await resetCourseProgress(user.uid, RESTARTABLE_COURSE_ID);
-      setConfirmRestart(false);
-    } finally {
-      setRestarting(false);
-    }
   };
 
   const deleteProfile = async () => {
@@ -244,50 +222,6 @@ export function ProfilePage() {
           </div>
         </div>
       </Card>
-
-      {/* Course progress */}
-      {course && (
-        <Card className="p-6">
-          <h2 className="mb-4 text-sm font-semibold uppercase tracking-wide text-muted">
-            Course progress
-          </h2>
-          <div className="flex items-center justify-between gap-4">
-            <div className="min-w-0">
-              <p className="text-sm font-semibold text-ink">{course.title}</p>
-              <p className="text-sm text-muted">
-                {hasCourseProgress
-                  ? `You're ${progress?.percentComplete ?? 0}% through. Restart to clear your progress and take it from the top.`
-                  : "You haven't started this course yet."}
-              </p>
-            </div>
-            {confirmRestart ? (
-              <div className="flex shrink-0 items-center gap-2">
-                <Button
-                  variant="secondary"
-                  onClick={() => setConfirmRestart(false)}
-                  disabled={restarting}
-                >
-                  Cancel
-                </Button>
-                <Button onClick={() => void restartCourse()} disabled={restarting}>
-                  <RotateCcw className="h-4 w-4" aria-hidden="true" />
-                  {restarting ? 'Restarting…' : 'Confirm restart'}
-                </Button>
-              </div>
-            ) : (
-              <Button
-                variant="secondary"
-                className="shrink-0"
-                onClick={() => setConfirmRestart(true)}
-                disabled={!hasCourseProgress}
-              >
-                <RotateCcw className="h-4 w-4" aria-hidden="true" />
-                Restart course
-              </Button>
-            )}
-          </div>
-        </Card>
-      )}
 
       {/* Danger zone */}
       <Card className="border-wrong/30 p-6">

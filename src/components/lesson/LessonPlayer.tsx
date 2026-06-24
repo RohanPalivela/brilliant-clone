@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { motion, useReducedMotion } from 'framer-motion';
 import { X, Lightbulb, ArrowRight, ArrowLeft, Check } from 'lucide-react';
 import type { Course, Lesson, Slide, SlideAnswer } from '../../types/content';
 import { defaultAnswer } from '../../lib/answers';
@@ -48,10 +49,13 @@ export function LessonPlayer({
 }: LessonPlayerProps) {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const reduce = useReducedMotion();
 
   const total = lesson.slides.length;
   const startIndex = Math.min(Math.max(0, initialSlideIndex), total - 1);
 
+  // Direction of the last navigation: +1 forward, -1 back. Drives slide motion.
+  const [dir, setDir] = useState(1);
   const [slideIndex, setSlideIndex] = useState(startIndex);
   // Furthest slide the student has reached. Going backwards never lowers this,
   // so revisiting earlier slides won't rewind their saved progress.
@@ -157,6 +161,7 @@ export function LessonPlayer({
     onInteraction?.();
     markComplete(slide.id);
     if (slideIndex < total - 1) {
+      setDir(1);
       setSlideIndex((i) => i + 1);
     } else {
       void finishLesson();
@@ -165,6 +170,7 @@ export function LessonPlayer({
 
   const handleBack = () => {
     onInteraction?.();
+    setDir(-1);
     setSlideIndex((i) => Math.max(0, i - 1));
   };
 
@@ -233,14 +239,20 @@ export function LessonPlayer({
       </header>
 
       {/* Slide body */}
-      <main className="mx-auto flex w-full max-w-2xl flex-1 flex-col justify-center px-4 py-8">
-        <SlideView
+      <main className="mx-auto flex w-full max-w-2xl flex-1 flex-col justify-center overflow-hidden px-4 py-8">
+        <motion.div
           key={slide.id}
-          slide={slide}
-          answer={answer}
-          onAnswer={setAnswer}
-          showMistakes={checked && !isCorrect}
-        />
+          initial={reduce ? false : { x: dir * 48, opacity: 0 }}
+          animate={{ x: 0, opacity: 1 }}
+          transition={{ duration: reduce ? 0 : 0.22, ease: 'easeOut' }}
+        >
+          <SlideView
+            slide={slide}
+            answer={answer}
+            onAnswer={setAnswer}
+            showMistakes={checked && !isCorrect}
+          />
+        </motion.div>
       </main>
 
       {/* Footer: feedback + actions */}

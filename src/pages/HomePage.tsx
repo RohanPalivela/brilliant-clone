@@ -10,7 +10,7 @@ import { Button } from '../components/ui/Button';
 import { ProgressBar } from '../components/ui/ProgressBar';
 import { CourseCard } from '../components/course/CourseCard';
 
-const FEATURED_COURSE_ID = 'dynamic-programming';
+const FEATURED_COURSE_ID = 'dynamic-programming-mastery';
 
 function greeting(): string {
   const h = new Date().getHours();
@@ -105,7 +105,7 @@ export function HomePage() {
           </div>
           <Link to={`/courses/${course.id}/lessons/${course.lessons[0].id}`}>
             <Button variant="secondary" size="lg">
-              Start Dynamic Programming
+              Start {course.title}
               <ArrowRight className="h-4 w-4" aria-hidden="true" />
             </Button>
           </Link>

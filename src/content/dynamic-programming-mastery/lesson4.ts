@@ -1,18 +1,17 @@
 import type { Lesson } from '../../types/content';
 
 // Lesson 4 — Name the pattern and turn the by-hand sweep into code.
-// We skip another staircase and go straight to programming: a fill-in-the-blank
-// tabulation loop. The blanks are exactly the recurrence pieces the learner has
-// been doing by hand (the ground case, the look-back i − j, and the cell to set).
+// Teacher shows the finished loop and narrates it (worked example) BEFORE the
+// learner completes the same loop from blanks. Then an animated DPTable runs it.
 export const lesson4: Lesson = {
   id: 'the-dp-mindset',
-  courseId: 'dynamic-programming',
+  courseId: 'dynamic-programming-mastery',
   title: 'The DP Mindset',
   order: 4,
   estimatedMinutes: 11,
   slides: [
     {
-      id: 'l4-s1',
+      id: 'm4-s1',
       type: 'explain',
       component: 'RichText',
       props: {
@@ -24,7 +23,7 @@ export const lesson4: Lesson = {
       validation: { type: 'none' },
     },
     {
-      id: 'l4-s2',
+      id: 'm4-s2',
       type: 'checkpoint',
       component: 'MultipleChoice',
       props: {
@@ -45,12 +44,30 @@ export const lesson4: Lesson = {
         'Reachability, Fibonacci, and fewest-coins each build on smaller subproblems. Finding a max or sorting do not reuse sub-answers that way.',
     },
     {
-      id: 'l4-s3',
+      id: 'm4-s3',
+      type: 'explain',
+      component: 'RichText',
+      props: {
+        heading: 'First, the finished loop',
+        body: 'Here’s the by-hand sweep written out as code. Line by line: start every step as False, mark the ground (index 0) True, then for each step try each jump — if the step you’d come from is reachable, this step is reachable too.',
+        pseudocode: [
+          'reachable = [False] * (n + 1)',
+          'reachable[0] = True',
+          'for i in range(1, n + 1):',
+          '    for j in jumps:',
+          '        if i - j >= 0 and reachable[i - j]:',
+          '            reachable[i] = True',
+        ].join('\n'),
+      },
+      validation: { type: 'none' },
+    },
+    {
+      id: 'm4-s4',
       type: 'checkpoint',
       component: 'CodeBlanks',
       props: {
         prompt:
-          'The by-hand sweep is just a loop. Drag the right pieces into the blanks to complete reachability.',
+          'Now you complete it. Drag the right pieces into the blanks to finish the same reachability loop.',
         codeLines: [
           [{ type: 'text', value: 'reachable = [False] * (n + 1)' }],
           [
@@ -86,28 +103,24 @@ export const lesson4: Lesson = {
       },
       hint: 'The ground (index 0) starts reachable. You arrive at i from i − j, and the cell you set is i itself.',
       explanationOnWrong:
-        'reachable[0] is the ground (True). You check the launch pad reachable[i − j], and when it’s reachable you set reachable[i] = True.',
+        'reachable[0] is the ground (True). You check the step you’d come from, reachable[i − j], and when it’s reachable you set reachable[i] = True.',
     },
     {
-      id: 'l4-s4',
-      type: 'explain',
-      component: 'RichText',
+      id: 'm4-s5',
+      type: 'explore',
+      component: 'DPTable',
       props: {
-        heading: 'That’s tabulation',
-        body: 'One pass, each cell read from earlier cells — the exact bottom-up sweep you did by hand, now as code that works for any jump set.',
-        pseudocode: [
-          'reachable = [False] * (n + 1)',
-          'reachable[0] = True',
-          'for i in range(1, n + 1):',
-          '    for j in jumps:',
-          '        if i - j >= 0 and reachable[i - j]:',
-          '            reachable[i] = True',
-        ].join('\n'),
+        mode: 'reachability',
+        steps: 11,
+        jumpSizes: [3, 5],
+        prompt:
+          'That’s tabulation: fill a table once, bottom-up, each entry read from earlier entries. Here’s your loop running — each cell is the inner `for j in jumps` check.',
+        caption: 'The same six lines work for any jump set.',
       },
       validation: { type: 'none' },
     },
     {
-      id: 'l4-s5',
+      id: 'm4-s6',
       type: 'celebrate',
       component: 'RichText',
       props: {

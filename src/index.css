@@ -115,6 +115,27 @@ body,
   animation: pop-in 0.35s ease-out both;
 }
 
+/* Look-back arrows drawing themselves in (used by the looping staircase intro).
+   Relies on the path's pathLength being normalized to 1. */
+@keyframes draw-arrow {
+  from {
+    stroke-dashoffset: 1;
+    opacity: 0;
+  }
+  25% {
+    opacity: 1;
+  }
+  to {
+    stroke-dashoffset: 0;
+    opacity: 1;
+  }
+}
+
+.draw-arrow {
+  stroke-dasharray: 1;
+  animation: draw-arrow 0.6s ease-out both;
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,

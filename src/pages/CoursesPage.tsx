@@ -2,15 +2,14 @@ import { useCourseProgress } from '../hooks/useProgress';
 import { courses } from '../content';
 import { CourseCard } from '../components/course/CourseCard';
 
-const FEATURED_COURSE_ID = 'dynamic-programming';
-
 export function CoursesPage() {
-  const { progress } = useCourseProgress(FEATURED_COURSE_ID);
+  // One course today; track its progress for the card.
+  const dpMastery = useCourseProgress('dynamic-programming-mastery');
   const percentById: Record<string, number> = {
-    [FEATURED_COURSE_ID]: progress?.percentComplete ?? 0,
+    'dynamic-programming-mastery': dpMastery.progress?.percentComplete ?? 0,
   };
   const startedById: Record<string, boolean> = {
-    [FEATURED_COURSE_ID]: !!progress,
+    'dynamic-programming-mastery': !!dpMastery.progress,
   };
 
   return (
