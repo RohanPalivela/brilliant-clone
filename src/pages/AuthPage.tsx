@@ -1,6 +1,6 @@
 import { useState, type FormEvent } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
-import { Sparkles } from 'lucide-react';
+import { LogoBadge } from '../components/layout/Logo';
 import { useAuth } from '../hooks/useAuth';
 import { Button } from '../components/ui/Button';
 import { Card } from '../components/ui/Card';
@@ -71,9 +71,7 @@ export function AuthPage() {
     <div className="flex min-h-screen items-center justify-center bg-canvas px-4 py-10">
       <div className="w-full max-w-sm">
         <div className="mb-8 flex flex-col items-center text-center">
-          <span className="mb-3 flex h-12 w-12 items-center justify-center rounded-xl bg-cta text-white">
-            <Sparkles className="h-6 w-6" aria-hidden="true" />
-          </span>
+          <LogoBadge size="lg" className="mb-3" />
           <h1 className="text-2xl font-bold text-ink">Learn by doing</h1>
           <p className="mt-1 text-sm text-muted">
             {mode === 'signin'

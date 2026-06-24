@@ -1,8 +1,9 @@
 import { NavLink } from 'react-router-dom';
-import { Home, BookOpen, User, Flame, Sparkles } from 'lucide-react';
+import { Home, BookOpen, User, Flame } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import { effectiveStreak } from '../../data/streak';
 import { cn } from '../../lib/cn';
+import { Logo } from './Logo';
 
 const links = [
   { to: '/', label: 'Home', icon: Home, end: true },
@@ -21,11 +22,8 @@ export function TopNav() {
       {/* Top bar */}
       <header className="sticky top-0 z-20 border-b border-line bg-surface/90 backdrop-blur">
         <div className="mx-auto flex h-16 max-w-5xl items-center justify-between px-4">
-          <NavLink to="/" className="flex items-center gap-2 font-bold text-ink">
-            <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-cta text-white">
-              <Sparkles className="h-4 w-4" aria-hidden="true" />
-            </span>
-            <span className="hidden sm:inline">DPrilliant</span>
+          <NavLink to="/" aria-label="DPrilliant home">
+            <Logo />
           </NavLink>
 
           <nav className="hidden items-center gap-1 md:flex">

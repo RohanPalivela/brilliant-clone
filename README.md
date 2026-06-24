@@ -1,7 +1,9 @@
-# Brilliant Clone — Dynamic Programming
+#  DPrilliant — Dynamic Programming Brilliant Clone
 
 > **Subject:** Dynamic Programming (computer science), taught for a competitive-programming-curious high-school student.
 > **Tagline:** _Learn by doing._
+
+**Deployed Link:** https://brilliant-clone-5c704.web.app
 
 An interactive, Brilliant.org-style learning app. Instead of videos or walls of text, learners discover dynamic programming by solving hands-on puzzles — marking reachable steps on a staircase, mapping it onto an array, and dragging a look-back window — with instant, specific feedback at every step.
 
