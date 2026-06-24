@@ -8,6 +8,8 @@ import { MultipleChoice } from '../interactive/MultipleChoice';
 import { CodeBlanks } from '../interactive/CodeBlanks';
 import { KnapsackPicker } from '../interactive/KnapsackPicker';
 import { DPTable } from '../interactive/DPTable';
+import { SubproblemIsolation } from '../interactive/SubproblemIsolation';
+import { ForwardExplosion } from '../interactive/ForwardExplosion';
 
 interface SlideViewProps {
   slide: Slide;
@@ -154,19 +156,28 @@ export function SlideView({ slide, answer, onAnswer, showMistakes }: SlideViewPr
         </div>
       );
 
+    case 'SubproblemIsolation':
+      return (
+        <div>
+          <Prompt text={slide.props.prompt} />
+          <SubproblemIsolation config={slide.props} />
+        </div>
+      );
+
     case 'RichText': {
       const { heading, body, emphasis, bullets, pseudocode, visual, bodyFirst } =
         slide.props;
-      const visualConfig = visual
-        ? {
-            steps: visual.steps,
-            jumpSizes: visual.jumpSizes,
-            editable: false,
-            showSolution: true,
-            highlightIndices: visual.highlightIndices,
-            display: visual.display,
-          }
-        : null;
+      const gridConfig =
+        visual && visual.component !== 'ForwardExplosion'
+          ? {
+              steps: visual.steps ?? 0,
+              jumpSizes: visual.jumpSizes,
+              editable: false,
+              showSolution: true,
+              highlightIndices: visual.highlightIndices,
+              display: visual.display,
+            }
+          : null;
       const noop = () => {};
       const bodyEl = body && (
         <p className="text-base leading-relaxed text-ink-soft">{body}</p>
@@ -202,12 +213,21 @@ export function SlideView({ slide, answer, onAnswer, showMistakes }: SlideViewPr
               ))}
             </ul>
           )}
-          {visualConfig && (
+          {visual?.component === 'ForwardExplosion' && (
+            <div className="mt-6">
+              <ForwardExplosion
+                jumpSizes={visual.jumpSizes}
+                depth={visual.depth}
+                caption={visual.caption}
+              />
+            </div>
+          )}
+          {gridConfig && (
             <div className="mt-6">
               {visual!.component === 'ArrayRow' ? (
-                <ArrayRow config={visualConfig} answer={{ kind: 'none' }} onAnswer={noop} />
+                <ArrayRow config={gridConfig} answer={{ kind: 'none' }} onAnswer={noop} />
               ) : (
-                <StairGrid config={visualConfig} answer={{ kind: 'none' }} onAnswer={noop} />
+                <StairGrid config={gridConfig} answer={{ kind: 'none' }} onAnswer={noop} />
               )}
             </div>
           )}

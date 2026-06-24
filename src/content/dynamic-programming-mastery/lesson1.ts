@@ -25,7 +25,19 @@ export const lesson1: Lesson = {
         highlightIndices: [0, 3, 5, 8],
         loop: true,
         prompt:
-          'You start on the ground — step 0 — and every move climbs exactly 3 or 5 steps, only upward.\nThe arrows show the idea: from a step you can jump +3 or +5, and you chain those jumps to climb higher.\nThe question for any step: can you land on it exactly?',
+          'You start on the ground — step 0 — and every move climbs exactly 3 or 5 steps, only upward.\nThe arrows show the idea: from a step you can jump +3 or +5, and you chain those jumps to climb higher.\nSo, the question is: given a step, can you land on it exactly?',
+      },
+      validation: { type: 'none' },
+    },
+    {
+      id: 'm1-s1b',
+      type: 'explain',
+      component: 'SubproblemIsolation',
+      props: {
+        prompt:
+          'Here’s the trick that makes this easy. To decide one step, you don’t replay every jump from the ground — you only ask about the steps you could have jumped from: the step 3 below and the step 5 below.\nIf even one of those is already known to be reachable, this step is reachable too.',
+        caption:
+          'This is called isolating the subproblem: one step’s answer depends only on a couple of smaller answers you’ve already worked out — everything else can stay unknown.',
       },
       validation: { type: 'none' },
     },
@@ -49,10 +61,16 @@ export const lesson1: Lesson = {
       component: 'RichText',
       props: {
         heading: 'Look backward, not forward',
-        body: 'Why not just follow every jump forward from the ground? Because that explodes into a tangle of paths to trace — far too many to check by hand.',
+        body: 'Why not just follow every jump forward from the ground? Because each step branches into +3 and +5 again and again — the paths double at every level and explode far faster than the staircase grows.',
         emphasis:
           'So we flip it around: to know if a step is reachable, we only ask whether the steps one jump before it are reachable. We move forward to reach the goal, but look backward to decide each step.',
         bodyFirst: true,
+        visual: {
+          component: 'ForwardExplosion',
+          jumpSizes: [3, 5],
+          depth: 3,
+          caption: 'Every jump forward branches again — too many paths to ever trace by hand.',
+        },
       },
       validation: { type: 'none' },
     },
@@ -62,7 +80,7 @@ export const lesson1: Lesson = {
       component: 'MultipleChoice',
       props: {
         question:
-          'To land on `step 7`, you can only arrive from `step 4` (that’s `7 − 3`) or `step 2` (that’s `7 − 5`).\nBoth step 4 and step 2 are unreachable from the ground.\nSo — is step 7 reachable from the ground?',
+          'To land on `step 7`, you can only arrive from `step 4` or `step 2`.\nBoth step 4 and step 2 are unreachable from the ground.\nSo — is step 7 reachable from the ground?',
         options: [
           { id: 'reach', label: 'Reachable' },
           { id: 'no', label: 'Not reachable' },

@@ -19,6 +19,7 @@ export type ComponentType =
   | 'CodeBlanks'
   | 'KnapsackPicker'
   | 'DPTable'
+  | 'SubproblemIsolation'
   | 'RichText';
 
 export type CellMark = 'empty' | 'check' | 'cross';
@@ -128,13 +129,18 @@ export interface MultipleChoiceProps {
 }
 
 export interface RichTextVisual {
-  component: 'StairGrid' | 'ArrayRow';
-  steps: number;
+  component: 'StairGrid' | 'ArrayRow' | 'ForwardExplosion';
+  /** Stairs/array length for grid reveals. Unused by ForwardExplosion. */
+  steps?: number;
   jumpSizes: number[];
   /** Cells to keep highlighted on the read-only reveal grid. */
   highlightIndices?: number[];
   /** Show 0/1 instead of ✓/✗ glyphs on the reveal grid. */
   display?: CellDisplay;
+  /** ForwardExplosion only: how many times the forward paths branch. */
+  depth?: number;
+  /** Caption shown beneath the visual. */
+  caption?: string;
 }
 
 /** One token in a line of code: literal text or a fill-in-the-blank slot. */
@@ -153,6 +159,19 @@ export interface CodeBlanksProps {
   /** Draggable/tappable tokens the learner places into the blanks. */
   tokens: CodeBlanksOption[];
   prompt?: string;
+}
+
+/**
+ * A read-only, looping schematic that names the "isolate the subproblem" idea:
+ * five steps sit in a row, and the rightmost (the goal) is decided only by the
+ * two steps it could be reached from. One predecessor is reachable (green, valid
+ * arrow), the other is a dead end (red, invalid arrow), and the steps in between
+ * stay unknown because they don't affect the goal. The goal then resolves to ✓.
+ */
+export interface SubproblemIsolationProps {
+  prompt?: string;
+  /** Caption shown beneath the diagram. */
+  caption?: string;
 }
 
 export interface RichTextProps {
@@ -237,6 +256,7 @@ export type Slide =
   | (BaseSlide & { component: 'CodeBlanks'; props: CodeBlanksProps; validation?: Validation })
   | (BaseSlide & { component: 'KnapsackPicker'; props: KnapsackPickerProps; validation?: Validation })
   | (BaseSlide & { component: 'DPTable'; props: DPTableProps; validation?: Validation })
+  | (BaseSlide & { component: 'SubproblemIsolation'; props: SubproblemIsolationProps; validation?: Validation })
   | (BaseSlide & { component: 'RichText'; props: RichTextProps; validation?: Validation });
 
 /** A learner's answer for a slide, shape depends on the widget. */

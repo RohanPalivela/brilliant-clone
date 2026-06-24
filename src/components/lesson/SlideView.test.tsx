@@ -107,6 +107,25 @@ describe('SlideView dispatch', () => {
     expect(screen.getByText('for i in range(n):')).toBeInTheDocument();
   });
 
+  it('renders a ForwardExplosion diagram for a RichText visual', () => {
+    renderSlide({
+      id: 's',
+      type: 'explain',
+      component: 'RichText',
+      props: {
+        heading: 'Look backward, not forward',
+        visual: {
+          component: 'ForwardExplosion',
+          jumpSizes: [3, 5],
+          depth: 3,
+          caption: 'Too many paths to trace.',
+        },
+      },
+    });
+    expect(screen.getByRole('img', { name: /far more paths than can be counted/i })).toBeInTheDocument();
+    expect(screen.getByText('Too many paths to trace.')).toBeInTheDocument();
+  });
+
   it('renders a read-only solution grid for a RichText visual', () => {
     renderSlide({
       id: 's',

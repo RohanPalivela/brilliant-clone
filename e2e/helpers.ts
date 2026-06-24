@@ -52,6 +52,9 @@ export async function completeLesson1(page: Page): Promise<void> {
   // Slide 1 — problem + diagram (read-only StairGrid)
   await page.getByRole('button', { name: 'Continue' }).click();
 
+  // Slide 1b — isolate the subproblem (SubproblemIsolation diagram)
+  await page.getByRole('button', { name: 'Continue' }).click();
+
   // Slide 2 — worked example (StaircaseWalkthrough stepper)
   await page.getByRole('button', { name: 'Continue' }).click();
 
