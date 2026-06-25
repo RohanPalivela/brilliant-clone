@@ -10,7 +10,7 @@ const lessons = [lesson1, lesson2, lesson3, lesson4, lesson5, lesson6];
 
 export const dynamicProgrammingMastery: Course = {
   id: 'dynamic-programming-mastery',
-  title: 'Mastering Dynamic Programming',
+  title: 'Intro to Dynamic Programming',
   shortDescription:
     'Learn dynamic programming from scratch — solve big problems by reusing answers to smaller ones.',
   description:

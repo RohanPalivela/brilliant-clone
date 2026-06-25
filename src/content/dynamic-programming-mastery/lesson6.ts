@@ -2,10 +2,9 @@ import type { Lesson } from '../../types/content';
 
 // Lesson 6 — From yes/no to "how many?". The jump from feasibility to
 // optimization: cells stop storing a bit and start storing a *value* you
-// minimize over choices. We watch greedy fail, let the learner beat it by hand
-// (CoinBuilder, fewest mode), build the min-coins recurrence from two known
-// subproblems, make the learner perform the argmin first-coin choice
-// (MinChoicePicker), then run it as a table and a loop.
+// minimize over choices. We watch greedy fail, build the min-coins recurrence
+// from two known subproblems, make the learner perform the argmin first-coin
+// choice (MinChoicePicker), then run it as a table and a loop.
 export const lesson6: Lesson = {
   id: 'fewest-coins',
   courseId: 'dynamic-programming-mastery',
@@ -41,25 +40,6 @@ export const lesson6: Lesson = {
           'Greedy is fast but shortsighted — one early “biggest coin” locks you into a worse total. We need a method that considers every option.',
       },
       validation: { type: 'none' },
-    },
-    {
-      id: 'm6-s2b',
-      type: 'checkpoint',
-      component: 'CoinBuilder',
-      props: {
-        coins: [1, 3, 4],
-        target: 6,
-        fewest: true,
-        showFewest: true,
-        prompt:
-          'Greedy spent 3 coins on 6. Can you do better? Build 6 from {1, 3, 4} using the fewest coins you can. Tap to add, tap a coin in your tray to remove it — you’re done when you hit 6 with no waste.',
-        caption:
-          'Hands-on optimization: there’s a 2-coin way greedy never finds. Next we’ll see the rule that always lands on it.',
-      },
-      validation: { type: 'coinSum', coins: [1, 3, 4], target: 6, fewest: true },
-      hint: 'Greedy grabbed the 4 first. What if you skip it? Two equal coins make 6 on their own.',
-      explanationOnWrong:
-        'The fewest is 2 coins: 3 + 3 = 6. Reaching 6 with more coins (like 4 + 1 + 1) hits the target but isn’t the fewest.',
     },
     {
       id: 'm6-s3',
@@ -117,9 +97,9 @@ export const lesson6: Lesson = {
         coins: [1, 3, 4],
         amount: 6,
         prompt:
-          'Now run the recurrence yourself on making 6 with {1, 3, 4}. Each card lays down one coin first, then reuses the already-solved best answer for what’s left. Pick the first coin that makes 6 with the fewest coins overall.',
+          'Your turn to make 6 with {1, 3, 4}. Each card starts from the cheapest known way to make a smaller amount, then adds one coin to land on 6. Pick the coin whose total is smallest.',
         caption:
-          'Every choice is 1 (the coin you add) + the best answer for the leftover. The winner is whichever total is smallest.',
+          'Each total = the coins already used for the smaller amount + 1 for the coin you add. Pick the smallest total.',
       },
       validation: { type: 'minCoinChoice', coins: [1, 3, 4], amount: 6 },
       hint: 'Compare 1 + best[6 − c] for each coin c. Laying a 3 leaves make 3, which already costs only 1.',

@@ -40,10 +40,11 @@ const reachableCpp = `bool reachable_steps(int n, std::vector<int>& jumps) {
 
 // Lesson 4 — Name the pattern and turn the by-hand sweep into code.
 // Arc: reconnect to the reachability sweep you already did by hand → ground the
-// "build from smaller answers" idea (and separate the OR vs SUM operators so DP
-// doesn't get mistaken for "add the two cells before") → watch tabulation run →
-// name it → read the finished loop → write it from blanks. See → name → write,
-// just like lessons 5 and 6.
+// "build from smaller answers" idea, showing the same table shape behind
+// reachability, Fibonacci, and counting ways (only the combine step — OR vs SUM
+// — changes) → name the technique (tabulation) → read the finished loop for the
+// steps example, noting it extends to other problems later → write it from
+// blanks. Name → read → write, just like lessons 5 and 6.
 export const lesson4: Lesson = {
   id: 'the-dp-mindset',
   courseId: 'dynamic-programming-mastery',
@@ -78,7 +79,7 @@ export const lesson4: Lesson = {
         showArrows: true,
         arrowTargets: [11],
         prompt:
-          'Remember this? Jumps {3, 5}, eleven steps. You already swept this array by hand — `step 11` was reachable because `step 8` (11 − 3) or `step 6` (11 − 5) was.\nYou already did this by hand — now let’s name it and write it down as code.',
+          'Remember this? Jumps {3, 5}, eleven steps. You already swept this array by hand — `step 11` was reachable because `step 8` (11 − 3) or `step 6` (11 − 5) was.\nEach answer was built from smaller answers you’d already worked out — that’s the shape we just named. And once you spot that shape, you start seeing it everywhere.',
       },
       validation: { type: 'none' },
     },
@@ -128,49 +129,15 @@ export const lesson4: Lesson = {
       type: 'explain',
       component: 'RichText',
       props: {
-        heading: 'Same table, different operator',
-        body: 'It’s tempting to conclude “DP just means add the two previous cells.” It doesn’t. Reachability and counting-ways fill the very same table shape — each cell built from smaller cells — but they combine those smaller answers differently.',
+        heading: 'Same shape, one moving part',
+        body: 'Here’s the reassuring part: these problems are almost identical. Reachability, Fibonacci, counting ways — they all fill the same table shape, each cell built from the same smaller cells (the i − j look-backs). The only thing that changes from one problem to the next is how you compute the present cell from those earlier states.',
         bullets: [
-          'Reachability asks “can I get here?” → combine look-backs with OR: reachable if ANY predecessor is reachable.',
-          'Fibonacci and counting ways ask “how many?” → combine with SUM: ADD the counts from each case.',
+          'Reachability asks “can I get here?” → compute the cell by OR-ing the look-backs: reachable if ANY predecessor is reachable.',
+          'Fibonacci and counting ways ask “how many?” → compute the cell by SUMMING the look-backs: ADD the counts from each case.',
         ],
         emphasis:
-          'The shape is always the same — build each answer from smaller ones. Only the operator changes with the question (OR, SUM, and later min or max).',
+          'Same states, same look-backs — only the computation from earlier states to the present one changes with the question (OR, SUM, and later min or max).',
         bodyFirst: true,
-      },
-      validation: { type: 'none' },
-    },
-    {
-      id: 'm4-s2',
-      type: 'prompt',
-      component: 'MultipleChoice',
-      props: {
-        question:
-          'Back to the stairs with jumps {3, 5}. Which earlier answers decide whether `step 11` is reachable?',
-        options: [
-          { id: 'eightsix', label: '`step 8` and `step 6` — that’s 11 − 3 and 11 − 5' },
-          { id: 'threefive', label: '`step 3` and `step 5` — the jump sizes themselves' },
-          { id: 'tenfive', label: '`step 10` and `step 5`' },
-          { id: 'all', label: 'Every step from 0 to 10' },
-        ],
-      },
-      validation: { type: 'multipleChoice', correctIds: ['eightsix'] },
-      hint: 'Subtract each jump from 11, exactly like the by-hand sweep at the top of this lesson.',
-      explanationOnWrong:
-        'You land on 11 from one jump below it: 11 − 3 = 8 and 11 − 5 = 6. If `step 8` OR `step 6` is reachable, so is `step 11`. The jump sizes themselves aren’t the cells you read.',
-    },
-    {
-      id: 'm4-s5',
-      type: 'explore',
-      component: 'DPTable',
-      props: {
-        mode: 'reachability',
-        steps: 11,
-        jumpSizes: [3, 5],
-        display: 'binary',
-        prompt:
-          'Now watch the whole sweep happen on its own. The base case (`step 0`) is filled first, then each cell is decided left to right by OR-ing the earlier entries it can jump from — the highlighted cells are exactly the `i − j` look-backs you just named.',
-        caption: 'Bottom-up, one pass, no cell revisited — that’s the whole technique.',
       },
       validation: { type: 'none' },
     },
@@ -181,7 +148,7 @@ export const lesson4: Lesson = {
       props: {
         heading: 'The name for this: tabulation',
         bodyFirst: true,
-        body: 'You just watched a table fill from the bottom up — every entry computed once, in order, each one reading answers that already sit in earlier cells. That approach has a name.',
+        body: 'This way of working — fill a table from the bottom up, every entry computed once, in order, each one reading answers that already sit in earlier cells — is exactly what you’ve been doing across reachability, Fibonacci, and counting ways. It has a name.',
         emphasis:
           'Tabulation: build a table once, bottom-up, with each answer read from earlier subproblems.',
         bullets: [
@@ -200,7 +167,7 @@ export const lesson4: Lesson = {
       component: 'CodeViewer',
       props: {
         prompt:
-          'Here’s that exact sweep written as a real function — one generalized loop that works for any jump set, not just `[3, 5]`. Start every step False, mark the ground (index `0`) True, then for each step try each jump: if the step you’d come from is reachable, so is this one. Flip between languages — the logic is identical.',
+          'Here’s the staircase reachability sweep written as a real function — this one is for the steps example specifically, but the very same tabulation skeleton (seed the base case, walk the states, read earlier answers) extends to the other problems we’ll tackle later; only the combine step changes. Start every step False, mark the ground (index `0`) True, then for each step try each jump: if the step you’d come from is reachable, so is this one. Flip between languages — the logic is identical.',
         filename: 'reachable_steps',
         tabs: [
           { id: 'py', label: 'Python', language: 'py', code: reachablePython },
@@ -260,7 +227,7 @@ export const lesson4: Lesson = {
       component: 'RichText',
       props: {
         heading: 'You think in DP now',
-        body: 'You reconnected the by-hand sweep, separated OR from SUM, watched the table fill, named the technique — tabulation — and wrote the loop yourself. Next, we’ll meet the very same pattern wearing a disguise: making change with coins.',
+        body: 'You reconnected the by-hand sweep, saw the same table shape behind reachability, Fibonacci, and counting ways, separated OR from SUM, named the technique — tabulation — and wrote the loop yourself. Next, we’ll meet the very same pattern wearing a disguise: making change with coins.',
       },
       validation: { type: 'none' },
     },

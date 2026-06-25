@@ -16,7 +16,7 @@ test('a new learner can sign up and reach the home page', async ({ page }) => {
   ).toBeVisible();
   // The empty-state CTA appears for a brand-new account.
   await expect(
-    page.getByRole('button', { name: /Start Mastering Dynamic Programming/ }),
+    page.getByRole('button', { name: /Start Intro to Dynamic Programming/ }),
   ).toBeVisible();
   expect(user.email).toContain('@test.dev');
 });

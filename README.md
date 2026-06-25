@@ -8,7 +8,7 @@
 
 DPrilliant is an interactive, [Brilliant.org](https://brilliant.org)-style learning app for **dynamic programming**. Instead of videos or walls of text, learners *discover* DP by solving hands-on puzzles — marking reachable steps on a staircase, watching it lie down into an array, dragging a look-back window, and turning a by-hand sweep into a tabulation loop — with instant, specific feedback at every step.
 
-The course, **Mastering Dynamic Programming**, is six hand-built lessons that follow a direct-instruction shape: set up the problem, watch a worked example, solve it yourself, then watch the algorithm run.
+The course, **Intro to Dynamic Programming**, is six hand-built lessons that follow a direct-instruction shape: set up the problem, watch a worked example, solve it yourself, then watch the algorithm run.
 
 1. **Can You Reach the Top?** — discover reachability bottom-up on a staircase (jumps of 3 or 5).
 2. **From Stairs to Arrays** — watch the staircase lie down into a boolean `reachable[]` array.

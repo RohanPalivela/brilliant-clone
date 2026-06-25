@@ -17,14 +17,20 @@ describe('MinChoicePicker', () => {
   it('reports the chosen coin as a choice answer', () => {
     const onAnswer = vi.fn();
     render(<MinChoicePicker config={config} answer={empty} onAnswer={onAnswer} />);
-    fireEvent.click(screen.getByLabelText('Lay down a 3 coin, then make 3'));
+    fireEvent.click(
+      screen.getByLabelText('Made 3 cents in 1 coin, plus a 3 cent coin'),
+    );
     expect(onAnswer).toHaveBeenCalledWith({ kind: 'choice', selectedIds: ['c3'] });
   });
 
-  it('shows the subproblem total for each coin', () => {
+  it('builds on the solved smaller amount without revealing the total', () => {
     render(<MinChoicePicker config={config} answer={empty} onAnswer={() => {}} />);
-    // Laying a 3 leaves make 3 → 1 + best[3] = 2.
-    expect(screen.getByText('1 + best[3] = 2')).toBeInTheDocument();
+    // Laying a 3 builds on make 3 → best is 1 coin; the total stays unsolved.
+    expect(
+      screen.getByLabelText('Made 3 cents in 1 coin, plus a 3 cent coin'),
+    ).toBeInTheDocument();
+    expect(screen.queryByText('= 2')).not.toBeInTheDocument();
+    expect(screen.getAllByText('= ?').length).toBeGreaterThan(0);
   });
 
   it('marks the optimal card the learner missed when mistakes show', () => {
@@ -36,7 +42,9 @@ describe('MinChoicePicker', () => {
         showMistakes
       />,
     );
-    const missed = screen.getByLabelText('Lay down a 3 coin, then make 3');
+    const missed = screen.getByLabelText(
+      'Made 3 cents in 1 coin, plus a 3 cent coin',
+    );
     expect(missed.className).toMatch(/border-correct/);
   });
 });

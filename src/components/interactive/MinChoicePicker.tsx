@@ -1,5 +1,5 @@
 import { motion, useReducedMotion } from 'framer-motion';
-import { ArrowRight, Coins, Check } from 'lucide-react';
+import { Plus } from 'lucide-react';
 import type { MinChoicePickerProps, SlideAnswer } from '../../types/content';
 import { minCoinsTable, UNREACHABLE } from '../../lib/dp';
 import { optimalFirstCoins } from '../../lib/validation';
@@ -11,6 +11,8 @@ interface Props {
   onAnswer: (answer: SlideAnswer) => void;
   showMistakes?: boolean;
 }
+
+const coinWord = (n: number) => (n === 1 ? 'coin' : 'coins');
 
 /**
  * Pick which coin to lay down first to make `amount` cheapest. Each card shows
@@ -36,10 +38,16 @@ export function MinChoicePicker({ config, answer, onAnswer, showMistakes }: Prop
 
   return (
     <div className="w-full select-none">
-      <p className="mb-5 text-center text-sm text-muted">
-        Cheapest way to make{' '}
-        <span className="font-semibold text-ink">{amount}</span> — choose the first
-        coin to lay down
+      <p className="mb-4 text-center text-sm text-muted">
+        Which coin should you lay down to make{' '}
+        <span className="font-semibold text-ink">{amount}</span> with the fewest
+        coins?
+      </p>
+
+      {/* Frame every card the same way: build on a solved smaller amount, add one coin. */}
+      <p className="mb-4 text-center text-xs text-muted">
+        Each route already makes a smaller amount the cheapest way, then adds one
+        coin to land on <span className="font-semibold text-ink">{amount}</span>.
       </p>
 
       <div className="flex flex-col gap-3">
@@ -47,7 +55,6 @@ export function MinChoicePicker({ config, answer, onAnswer, showMistakes }: Prop
           const remainder = amount - coin;
           const subCost = best[remainder];
           const dead = subCost === UNREACHABLE;
-          const totalCost = dead ? null : subCost + 1;
           const id = `c${coin}`;
           const isSelected = selectedId === id;
           const isOptimal = optimalSet.has(coin);
@@ -60,7 +67,13 @@ export function MinChoicePicker({ config, answer, onAnswer, showMistakes }: Prop
               type="button"
               role="radio"
               aria-checked={isSelected}
-              aria-label={`Lay down a ${coin} coin, then make ${remainder}`}
+              aria-label={
+                dead
+                  ? `Add a ${coin} cent coin — that builds on ${remainder}, which can't be made`
+                  : `Made ${remainder} cents in ${subCost} ${coinWord(
+                      subCost,
+                    )}, plus a ${coin} cent coin`
+              }
               disabled={dead}
               onClick={() => choose(coin)}
               whileTap={reduce || dead ? undefined : { scale: 0.99 }}
@@ -75,46 +88,67 @@ export function MinChoicePicker({ config, answer, onAnswer, showMistakes }: Prop
                 missedBest && 'border-dashed border-correct ring-2 ring-correct/40',
               )}
             >
-              {/* The coin you'd lay down */}
-              <span className="flex h-12 w-12 shrink-0 flex-col items-center justify-center rounded-full border-2 border-flame/40 bg-gradient-to-b from-amber-100 to-amber-300 text-base font-extrabold tabular-nums text-ink dark:from-amber-700/40 dark:to-amber-600/30 dark:text-amber-100">
+              {/* The coin you'd lay down right now. */}
+              <span className="flex h-12 w-12 shrink-0 flex-col items-center justify-center rounded-full border-2 border-flame/40 bg-gradient-to-b from-amber-100 to-amber-300 text-base font-extrabold leading-none tabular-nums text-ink dark:from-amber-700/40 dark:to-amber-600/30 dark:text-amber-100">
                 {coin}
+                <span className="text-[9px] font-semibold opacity-70">¢</span>
               </span>
 
               <div className="min-w-0 flex-1">
-                <div className="flex items-center gap-1.5 text-sm text-ink-soft">
-                  <span>
-                    make{' '}
-                    <span className="font-semibold tabular-nums text-ink">
-                      {remainder}
+                {dead ? (
+                  <>
+                    <div className="text-sm font-semibold text-ink">
+                      Add a {coin}¢ coin
+                    </div>
+                    <div className="mt-0.5 text-sm text-wrong">
+                      That builds on{' '}
+                      <span className="font-semibold">{remainder}</span>, which
+                      can’t be made with these coins.
+                    </div>
+                  </>
+                ) : (
+                  <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-ink-soft">
+                    {/* The already-solved smaller amount you build on. */}
+                    <span>
+                      Made{' '}
+                      <span className="font-bold tabular-nums text-ink">
+                        {remainder}¢
+                      </span>{' '}
+                      in{' '}
+                      <span className="font-bold tabular-nums text-ink">
+                        {subCost} {coinWord(subCost)}
+                      </span>
                     </span>
-                  </span>
-                  <ArrowRight className="h-3.5 w-3.5 shrink-0 text-muted" aria-hidden="true" />
-                  {dead ? (
-                    <span className="font-semibold text-wrong">can’t be made</span>
-                  ) : (
-                    <span className="inline-flex items-center gap-1 font-semibold text-ink">
-                      <Coins className="h-3.5 w-3.5 text-flame" aria-hidden="true" />
-                      <span className="tabular-nums">{subCost}</span>
-                      <span className="font-normal text-muted">already solved</span>
+
+                    <Plus className="h-3.5 w-3.5 shrink-0 text-muted" aria-hidden="true" />
+
+                    {/* The one coin this card lays down to reach the target. */}
+                    <span>
+                      this{' '}
+                      <span className="font-bold tabular-nums text-ink">{coin}¢</span>{' '}
+                      coin
                     </span>
-                  )}
-                </div>
-                {!dead && (
-                  <div className="mt-0.5 font-mono text-xs text-muted">
-                    1 + best[{remainder}] = {totalCost}
                   </div>
                 )}
               </div>
 
+              {/* No total here — that's the sum the learner has to work out. */}
               {!dead && (
                 <span
                   className={cn(
-                    'flex shrink-0 items-center gap-1 rounded-lg px-2.5 py-1.5 text-sm font-bold tabular-nums',
-                    isSelected ? 'bg-brand text-white' : 'bg-canvas text-ink',
+                    'flex shrink-0 flex-col items-center justify-center rounded-lg px-3 py-1.5 leading-tight',
+                    isSelected ? 'bg-brand text-white' : 'bg-canvas text-muted',
                   )}
                 >
-                  {isSelected && <Check className="h-3.5 w-3.5" aria-hidden="true" />}
-                  {totalCost} coins
+                  <span className="text-base font-extrabold tabular-nums">= ?</span>
+                  <span
+                    className={cn(
+                      'text-[11px] font-medium',
+                      isSelected ? 'text-white/80' : 'text-muted',
+                    )}
+                  >
+                    coins total
+                  </span>
                 </span>
               )}
             </motion.button>

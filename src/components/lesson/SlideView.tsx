@@ -12,6 +12,7 @@ import { CoinBuilder } from '../interactive/CoinBuilder';
 import { PathBuilder } from '../interactive/PathBuilder';
 import { MinChoicePicker } from '../interactive/MinChoicePicker';
 import { DPTable } from '../interactive/DPTable';
+import { CoinSweep } from '../interactive/CoinSweep';
 import { SubproblemIsolation } from '../interactive/SubproblemIsolation';
 import { GreedyFailure } from '../interactive/GreedyFailure';
 import { CoinRecurrence } from '../interactive/CoinRecurrence';
@@ -197,6 +198,14 @@ export function SlideView({ slide, answer, onAnswer, showMistakes }: SlideViewPr
         <div>
           <Prompt text={slide.props.prompt} />
           <DPTable config={slide.props} />
+        </div>
+      );
+
+    case 'CoinSweep':
+      return (
+        <div>
+          <Prompt text={slide.props.prompt} />
+          <CoinSweep config={slide.props} />
         </div>
       );
 

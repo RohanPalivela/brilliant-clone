@@ -23,6 +23,7 @@ export type ComponentType =
   | 'PathBuilder'
   | 'MinChoicePicker'
   | 'DPTable'
+  | 'CoinSweep'
   | 'SubproblemIsolation'
   | 'GreedyFailure'
   | 'CoinRecurrence'
@@ -409,6 +410,22 @@ export type DPTableProps =
       caption?: string;
     };
 
+/**
+ * Animated, read-only "watch it run" sweep of coin-change feasibility. Fills
+ * can_make[] bottom-up — the staircase reachability sweep with coins as the
+ * jumps and amounts as the steps — drawing each amount's look-backs (amount −
+ * coin) and narrating which coin lands it. Auto-plays with scrub controls.
+ */
+export interface CoinSweepProps {
+  /** Coin denominations available, e.g. [2, 5]. */
+  coins: number[];
+  /** Highest amount swept; the row spans 0..amount. */
+  amount: number;
+  prompt?: string;
+  /** Caption shown beneath the sweep. */
+  caption?: string;
+}
+
 export type Validation =
   | { type: 'none' }
   | { type: 'reachability'; jumpSizes: number[]; steps: number; target?: number }
@@ -441,6 +458,7 @@ export type Slide =
   | (BaseSlide & { component: 'PathBuilder'; props: PathBuilderProps; validation?: Validation })
   | (BaseSlide & { component: 'MinChoicePicker'; props: MinChoicePickerProps; validation?: Validation })
   | (BaseSlide & { component: 'DPTable'; props: DPTableProps; validation?: Validation })
+  | (BaseSlide & { component: 'CoinSweep'; props: CoinSweepProps; validation?: Validation })
   | (BaseSlide & { component: 'SubproblemIsolation'; props: SubproblemIsolationProps; validation?: Validation })
   | (BaseSlide & { component: 'GreedyFailure'; props: GreedyFailureProps; validation?: Validation })
   | (BaseSlide & { component: 'CoinRecurrence'; props: CoinRecurrenceProps; validation?: Validation })

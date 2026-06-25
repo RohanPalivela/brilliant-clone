@@ -21,6 +21,18 @@ if (!document.elementFromPoint) {
   document.elementFromPoint = () => null;
 }
 
+// jsdom lacks ResizeObserver, which the look-back arrow layout (ReachabilityCells)
+// observes to measure cell positions. A no-op stub is enough for tests.
+if (!('ResizeObserver' in globalThis)) {
+  class ResizeObserverStub {
+    observe() {}
+    unobserve() {}
+    disconnect() {}
+  }
+  globalThis.ResizeObserver =
+    ResizeObserverStub as unknown as typeof ResizeObserver;
+}
+
 if (!window.matchMedia) {
   window.matchMedia = (query: string) =>
     ({
