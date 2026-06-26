@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
-import { Sparkles, X, Send, ArrowRight, ShieldCheck, BookOpen } from 'lucide-react';
+import { Sparkles, X, Send, ArrowRight, BookOpen } from 'lucide-react';
 import type { Course, Lesson, SlideAnswer } from '../../types/content';
 import type { ChatTurn, NavigationTarget } from '../../lib/aiTutor/types';
 import { buildTutorContext } from '../../lib/aiTutor/context';
