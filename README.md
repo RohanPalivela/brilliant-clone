@@ -21,7 +21,7 @@ The core idea is that **a lesson is structured data, not HTML.** Each slide decl
 
 ## Who it's for
 
-A **competitive-programming-curious high-school (or early-college) student** who already knows arrays and recursion and wants an intuition for dynamic programming, not just the definition. More broadly, it's for anyone who learns best by doing rather than watching.
+A **competitive-programming-curious high-school (or early-college) student** who already knows arrays and recursion and wants a step-by-step guide to building intuition for dynamic programming in a novel way. 
 
 ## How to run it
 
