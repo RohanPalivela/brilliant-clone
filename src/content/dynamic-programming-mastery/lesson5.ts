@@ -44,6 +44,26 @@ export const lesson5: Lesson = {
         'Aim for exactly 13 — overshooting means rethinking the mix. With three coins, figure out how many of each fit: if you use one 5, what amount is left, and does it split evenly into 4s? Adjust the count of each size until the tray reads 13 exactly.',
     },
     {
+      id: 'm5-s1c',
+      type: 'checkpoint',
+      component: 'ArrayRow',
+      props: {
+        steps: 13,
+        jumpSizes: [4, 5],
+        target: 13,
+        editable: true,
+        showArrows: true,
+        display: 'icon',
+        name: 'can_make[]',
+        prompt:
+          'Before any animation does it for you, fill in can_make[] by hand. For every amount from 0 to 13, decide: can you make it exactly with 4s and 5s? Amount 0 is already ✓ (make it with no coins). Tap a cell once for ✓ if it’s makeable, again for ✗ if it isn’t — an amount is ✓ only when (amount − 4) or (amount − 5) is already ✓.',
+      },
+      validation: { type: 'reachability', jumpSizes: [4, 5], steps: 13, target: 13 },
+      hint: 'It’s the staircase with coins as jumps: 4 and 5 are your look-backs. Sweep left to right, and for each amount check (amount − 4) and (amount − 5) — ✓ if either is already ✓.',
+      explanationOnWrong:
+        'Go left to right so each amount you need is already filled. For every amount read only (amount − 4) and (amount − 5): if either is ✓, this amount is ✓ too; if both fall below 0 or are ✗, it’s ✗. Re-check the small amounts first — 1, 2, 3, 6, 7 can’t be made from 4s and 5s, but 8, 9, and 10 can.',
+    },
+    {
       id: 'm5-s2',
       type: 'explore',
       component: 'CoinSweep',
@@ -51,7 +71,7 @@ export const lesson5: Lesson = {
         coins: [4, 5],
         amount: 13,
         prompt:
-          'Now watch an array answer “can I make this?” for every amount at once. It fills left to right: each amount reads the cells one coin below it — exactly the i − j look-back from the staircase, with coins playing the part of jumps.',
+          'You just filled that array by hand — now watch the same answer build for every amount at once. It fills left to right: each amount reads the cells one coin below it — exactly the i − j look-back from the staircase, with coins playing the part of jumps.',
         caption:
           'No new algorithm — the same bottom-up sweep you ran on the stairs, now spelled out in coins.',
       },

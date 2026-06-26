@@ -6,36 +6,35 @@ afterEach(() => {
 });
 
 describe('getTutorConfig', () => {
-  it('falls back to OpenAI defaults when only a key is set', () => {
-    vi.stubEnv('VITE_AI_TUTOR_API_KEY', 'sk-test');
-    vi.stubEnv('VITE_AI_TUTOR_BASE_URL', '');
+  it('falls back to the bundled proxy endpoint and default model', () => {
+    vi.stubEnv('VITE_AI_TUTOR_ENABLED', 'true');
+    vi.stubEnv('VITE_AI_TUTOR_ENDPOINT', '');
     vi.stubEnv('VITE_AI_TUTOR_MODEL', '');
     const cfg = getTutorConfig();
-    expect(cfg.apiKey).toBe('sk-test');
-    expect(cfg.baseUrl).toBe('https://api.openai.com/v1');
+    expect(cfg.enabled).toBe(true);
+    expect(cfg.endpoint).toBe('/api/tutor');
     expect(cfg.model).toBe('gpt-4o-mini');
   });
 
-  it('strips a trailing slash from the base url', () => {
-    vi.stubEnv('VITE_AI_TUTOR_API_KEY', 'sk-test');
-    vi.stubEnv('VITE_AI_TUTOR_BASE_URL', 'https://proxy.example.com/v1/');
-    expect(getTutorConfig().baseUrl).toBe('https://proxy.example.com/v1');
+  it('strips a trailing slash from a custom endpoint', () => {
+    vi.stubEnv('VITE_AI_TUTOR_ENDPOINT', 'https://proxy.example.com/tutor/');
+    expect(getTutorConfig().endpoint).toBe('https://proxy.example.com/tutor');
   });
 });
 
 describe('isTutorConfigured', () => {
-  it('is false without a key (the rest of the app must still work)', () => {
-    vi.stubEnv('VITE_AI_TUTOR_API_KEY', '');
+  it('is false unless the feature flag is explicitly enabled (rest of app still works)', () => {
+    vi.stubEnv('VITE_AI_TUTOR_ENABLED', '');
     expect(isTutorConfigured()).toBe(false);
   });
 
-  it('is true once a key is present', () => {
-    vi.stubEnv('VITE_AI_TUTOR_API_KEY', 'sk-live');
+  it('is true when the flag is set to "true"', () => {
+    vi.stubEnv('VITE_AI_TUTOR_ENABLED', 'true');
     expect(isTutorConfigured()).toBe(true);
   });
 
-  it('treats whitespace-only keys as unconfigured', () => {
-    vi.stubEnv('VITE_AI_TUTOR_API_KEY', '   ');
+  it('treats any non-"true" value as disabled', () => {
+    vi.stubEnv('VITE_AI_TUTOR_ENABLED', '1');
     expect(isTutorConfigured()).toBe(false);
   });
 });

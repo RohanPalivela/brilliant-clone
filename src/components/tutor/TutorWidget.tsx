@@ -205,8 +205,8 @@ function EmptyState({
       <div className="mt-6 text-center text-sm text-muted">
         <p className="font-semibold text-ink">Tutor is asleep 😴</p>
         <p className="mt-1">
-          Add an API key to <code className="font-mono">VITE_AI_TUTOR_API_KEY</code> to
-          wake Sage up. Everything else in the lesson works without it.
+          Set <code className="font-mono">VITE_AI_TUTOR_ENABLED=true</code> (and configure the
+          server proxy) to wake Sage up. Everything else in the lesson works without it.
         </p>
       </div>
     );

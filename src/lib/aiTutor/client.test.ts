@@ -6,6 +6,12 @@ import {
   streamTutorReply,
   TutorError,
 } from './client';
+import { getTutorAuthToken } from './auth';
+
+// The token getter pulls in Firebase, so stub it: these tests only care that a
+// token is attached, not where it comes from.
+vi.mock('./auth', () => ({ getTutorAuthToken: vi.fn() }));
+const mockedToken = vi.mocked(getTutorAuthToken);
 
 const encoder = new TextEncoder();
 
@@ -31,7 +37,8 @@ function streamResponse(chunks: string[], init: { ok?: boolean; status?: number 
 }
 
 beforeEach(() => {
-  vi.stubEnv('VITE_AI_TUTOR_API_KEY', 'sk-test');
+  vi.stubEnv('VITE_AI_TUTOR_ENABLED', 'true');
+  mockedToken.mockResolvedValue('id-token');
 });
 
 afterEach(() => {
@@ -92,11 +99,29 @@ describe('streamTutorReply', () => {
     expect(sentBody).not.toHaveProperty('temperature');
   });
 
-  it('throws a TutorError when no API key is configured', async () => {
-    vi.stubEnv('VITE_AI_TUTOR_API_KEY', '');
+  it('throws a TutorError when the tutor is not enabled', async () => {
+    vi.stubEnv('VITE_AI_TUTOR_ENABLED', '');
     await expect(streamTutorReply([{ role: 'user', content: 'hi' }])).rejects.toBeInstanceOf(
       TutorError,
     );
+  });
+
+  it('throws a TutorError when the learner is not signed in', async () => {
+    mockedToken.mockResolvedValue(null);
+    await expect(streamTutorReply([{ role: 'user', content: 'hi' }])).rejects.toBeInstanceOf(
+      TutorError,
+    );
+  });
+
+  it('sends the Firebase ID token as a bearer credential, not an API key', async () => {
+    const fetchMock = vi.fn().mockResolvedValue(streamResponse(['data: [DONE]\n']));
+    vi.stubGlobal('fetch', fetchMock);
+
+    await streamTutorReply([{ role: 'user', content: 'hi' }]);
+
+    const [url, init] = fetchMock.mock.calls[0];
+    expect(url).toBe('/api/tutor');
+    expect((init.headers as Record<string, string>).Authorization).toBe('Bearer id-token');
   });
 
   it('streams SSE deltas, reassembling content split across chunks', async () => {
@@ -118,11 +143,24 @@ describe('streamTutorReply', () => {
     expect(tokens).toEqual(['Hello', ' world']);
   });
 
-  it('throws a TutorError on a non-ok response', async () => {
+  it('throws a TutorError on a non-ok response, falling back to the status code', async () => {
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue(streamResponse([], { ok: false, status: 500 })));
     await expect(
       streamTutorReply([{ role: 'user', content: 'hi' }]),
     ).rejects.toThrow(/500/);
+  });
+
+  it('surfaces the server-provided error message from a non-ok response', async () => {
+    const res = {
+      ok: false,
+      status: 500,
+      body: null,
+      json: () => Promise.resolve({ error: 'Server is missing FIREBASE_PROJECT_ID.' }),
+    };
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(res));
+    await expect(
+      streamTutorReply([{ role: 'user', content: 'hi' }]),
+    ).rejects.toThrow(/missing FIREBASE_PROJECT_ID/);
   });
 
   it('falls back to JSON when there is no stream body', async () => {

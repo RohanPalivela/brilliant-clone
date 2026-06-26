@@ -102,6 +102,24 @@ export const lesson3: Lesson = {
         'Check that you tapped exactly three steps, one for each jump. Subtract each jump from 7 to find the steps you would launch from — do not tap the jump sizes 2, 3, 4 themselves, and never a step above 7.',
     },
     {
+      id: 'm3-s3c',
+      type: 'checkpoint',
+      component: 'StairGrid',
+      props: {
+        steps: 9,
+        jumpSizes: [2, 3, 4],
+        target: 9,
+        editable: true,
+        showArrows: true,
+        prompt:
+          'Now prove the method really carried over — solve the whole {2, 3, 4} staircase yourself, all the way to step 9. Start at the bottom (step 0 is already ✓) and work upward. Tap a step once for ✓ if it can be reached, again for ✗ if it can’t. A step is ✓ when any of the step 2 below, step 3 below, or step 4 below it is ✓.',
+      },
+      validation: { type: 'reachability', jumpSizes: [2, 3, 4], steps: 9, target: 9 },
+      hint: 'Same loop as before — just three look-backs instead of two. Go bottom to top, and for each step check (step − 2), (step − 3), and (step − 4): mark it ✓ the moment any one of them is ✓.',
+      explanationOnWrong:
+        'Work strictly bottom to top so every step you look back at is already decided. For each step read (step − 2), (step − 3), and (step − 4) — ✓ if any one is ✓, otherwise ✗. Watch the very bottom: with a smallest jump of 2, step 1 has no reachable step below it, so it stays ✗ — but almost everything above it fills in ✓.',
+    },
+    {
       id: 'm3-s5',
       type: 'explore',
       component: 'DPTable',
@@ -110,7 +128,7 @@ export const lesson3: Lesson = {
         steps: 9,
         jumpSizes: [2, 3, 4],
         prompt:
-          'Nothing about the algorithm changed — only the look-back distances. Watch the same left-to-right sweep solve a longer staircase, and notice each step reading the cells 2, 3, and 4 to its left.',
+          'You just filled that by hand — now watch the algorithm do the exact same sweep. Nothing about it changed, only the look-back distances. Notice each step reading the cells 2, 3, and 4 to its left, left to right.',
         caption: 'Swap the jump set and the same loop solves a new problem.',
       },
       validation: { type: 'none' },

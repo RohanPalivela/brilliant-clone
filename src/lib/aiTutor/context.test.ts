@@ -1,6 +1,11 @@
 import { describe, it, expect } from 'vitest';
 import type { Course, Lesson, Slide } from '../../types/content';
-import { buildReachableSlides, buildTutorContext, buildSystemPrompt } from './context';
+import {
+  buildReachableSlides,
+  buildUpcomingLessons,
+  buildTutorContext,
+  buildSystemPrompt,
+} from './context';
 
 function slide(id: string, over: Partial<Slide> = {}): Slide {
   return {
@@ -75,6 +80,17 @@ describe('buildReachableSlides', () => {
   });
 });
 
+describe('buildUpcomingLessons', () => {
+  it('lists later (locked) lessons by title only, never the current/earlier ones', () => {
+    const upcoming = buildUpcomingLessons(course, lessonB);
+    expect(upcoming).toEqual([{ lessonOrder: 3, lessonTitle: 'Later' }]);
+  });
+
+  it('is empty when the learner is on the final lesson', () => {
+    expect(buildUpcomingLessons(course, lessonC)).toEqual([]);
+  });
+});
+
 describe('buildSystemPrompt', () => {
   it('embeds the safeguards and ground truth, and bans giving the answer on an activity', () => {
     const ctx = buildTutorContext(course, lessonB, 1, { kind: 'choice', selectedIds: [] }, false);
@@ -103,6 +119,25 @@ describe('buildSystemPrompt', () => {
     expect(prompt).toMatch(/ON-topic/);
     // The reference list now carries the actual slide content, not just labels.
     expect(prompt).toMatch(/content:/);
+  });
+
+  it('treats future-lesson topics as on-topic, teasing them by title without leaking content', () => {
+    const ctx = buildTutorContext(course, lessonB, 0, { kind: 'none' }, false);
+    const prompt = buildSystemPrompt(ctx);
+
+    // Future topics are explicitly on-topic and must not be refused.
+    expect(prompt).toMatch(/FUTURE TOPICS ARE ALSO ON-TOPIC/);
+    expect(prompt).toMatch(/Coming later in this course/);
+    // The upcoming lesson is named by title only…
+    expect(prompt).toContain('Lesson 3: "Later"');
+    // …but its slide content/ids are still never exposed.
+    expect(prompt).not.toContain('l3s1');
+  });
+
+  it('marks the final lesson as having nothing coming later', () => {
+    const ctx = buildTutorContext(course, lessonC, 0, { kind: 'none' }, false);
+    const prompt = buildSystemPrompt(ctx);
+    expect(prompt).toMatch(/this is the final lesson/);
   });
 
   it('lets the tutor repeat the learner their own input but not the gated answer', () => {

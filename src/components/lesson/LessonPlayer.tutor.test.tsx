@@ -21,7 +21,7 @@ vi.mock('../../data/progressService', () => ({
 
 vi.mock('../../lib/aiTutor/config', () => ({
   isTutorConfigured: () => true,
-  getTutorConfig: () => ({ apiKey: 'sk', baseUrl: 'http://x/v1', model: 'm' }),
+  getTutorConfig: () => ({ enabled: true, endpoint: '/api/tutor', model: 'm' }),
 }));
 
 const streamTutorReply = vi.fn();

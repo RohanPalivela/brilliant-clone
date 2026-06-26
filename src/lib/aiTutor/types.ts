@@ -11,8 +11,11 @@ export interface TutorMessage {
 
 /** Runtime configuration resolved from Vite env vars. */
 export interface TutorConfig {
-  apiKey: string;
-  baseUrl: string;
+  /** Whether the tutor UI is turned on for this build. */
+  enabled: boolean;
+  /** Same-origin path of the server proxy that holds the real API key. */
+  endpoint: string;
+  /** Chat model slug (not a secret) — shapes the outgoing request body. */
   model: string;
 }
 
@@ -48,6 +51,19 @@ export interface TutorContext {
   solution: SlideSolution;
   /** Slides the tutor may reference / navigate to, in lesson order. */
   reachableSlides: ReachableSlide[];
+  /** Titles (no content) of not-yet-unlocked lessons, so the tutor can give an
+   *  accurate "this comes up later" teaser without spoiling or navigating there. */
+  upcomingLessons: UpcomingLesson[];
+}
+
+/**
+ * A future, still-locked lesson the tutor knows is coming. Only its title and
+ * order are exposed — never its slide content — so the tutor can name the topic
+ * as a teaser but cannot reveal or jump into locked material.
+ */
+export interface UpcomingLesson {
+  lessonOrder: number;
+  lessonTitle: string;
 }
 
 /** A slide the tutor is allowed to send the learner to (current + earlier lessons). */

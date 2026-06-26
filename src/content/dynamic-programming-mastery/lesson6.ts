@@ -26,6 +26,25 @@ export const lesson6: Lesson = {
       validation: { type: 'none' },
     },
     {
+      id: 'm6-s1b',
+      type: 'checkpoint',
+      component: 'CoinBuilder',
+      props: {
+        coins: [1, 3, 4],
+        target: 6,
+        fewest: true,
+        showFewest: true,
+        prompt:
+          'Try it yourself first. With coins {1, 3, 4}, make exactly 6 — but in as few coins as you can. The instinct is to grab the biggest coin that fits; go ahead and see where that lands you, then see if you can do better.',
+        caption:
+          'Hitting 6 is easy; hitting it in the fewest coins is the real puzzle. Notice that grabbing the biggest coin first doesn’t get you there.',
+      },
+      validation: { type: 'coinSum', coins: [1, 3, 4], target: 6, fewest: true },
+      hint: 'Start with the biggest coin, 4, and you’re forced into 4 + 1 + 1 — three coins. What if you never touch the 4? Two of one coin might land exactly on 6.',
+      explanationOnWrong:
+        'You can reach 6 many ways, but only one uses the fewest coins. Grabbing the biggest coin (4) strands you on 4 + 1 + 1 = three coins. Skip it and look for two equal coins that sum to 6 — that two-coin answer is exactly why the greedy instinct fails, as you’re about to see.',
+    },
+    {
       id: 'm6-s2',
       type: 'explore',
       component: 'GreedyFailure',

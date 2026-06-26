@@ -51,6 +51,22 @@ VITE_FIREBASE_APP_ID=...
 
 In the Firebase console, enable **Authentication → Email/Password and Google**, and create a **Firestore** database. The project (`brilliant-clone-5c704`) is already referenced in `.firebaserc`.
 
+> When deploying to Vercel, add your Vercel domain under **Authentication → Settings → Authorized domains**, or Google sign-in popups will be rejected.
+
+### 2b. (Optional) Configure the AI tutor
+
+The in-app tutor ("Sage") calls a serverless proxy (`api/tutor.ts`) so the model
+API key **never ships to the browser**. Two sets of vars (see `.env.example`):
+
+- **Client** (safe to bundle): `VITE_AI_TUTOR_ENABLED=true` to show the UI, plus
+  optional `VITE_AI_TUTOR_MODEL`.
+- **Server** (no `VITE_` prefix — set in the Vercel dashboard, or `.env` for
+  `vercel dev`): `AI_TUTOR_API_KEY` (the secret) and optional `AI_TUTOR_BASE_URL`.
+  Token verification uses `FIREBASE_PROJECT_ID`, which falls back to
+  `VITE_FIREBASE_PROJECT_ID`, so you normally don't need to set it twice.
+
+Leave `VITE_AI_TUTOR_ENABLED` off and the rest of the app is unaffected.
+
 ### 3. Develop
 
 ```bash
@@ -59,15 +75,26 @@ npm run build    # type-check + production build
 npm run lint     # oxlint
 ```
 
-### 4. Deploy (Firebase Hosting)
+### 4. Deploy (Vercel)
+
+Hosting + the tutor proxy live on **Vercel**; Firestore/Auth stay on Firebase.
+
+```bash
+vercel              # preview deploy
+vercel --prod       # production deploy  (or: npm run deploy)
+```
+
+Vercel auto-detects Vite (builds `dist/`) and compiles the edge function in
+`api/`. The SPA fallback lives in `vercel.json`. Set the env vars from
+`.env.example` under **Project → Settings → Environment Variables** (remember the
+server-only tutor vars have **no** `VITE_` prefix).
+
+Firestore rules and indexes still deploy through Firebase:
 
 ```bash
 firebase login
-firebase deploy        # hosting + Firestore rules + auth config
-# or: npm run deploy    # build + deploy in one step
+firebase deploy --only firestore   # or: npm run deploy:firestore
 ```
-
-Hosting serves the built `dist/` as a single-page app (see `firebase.json`).
 
 ## Testing
 

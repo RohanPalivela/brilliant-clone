@@ -1,3 +1,4 @@
+import { getTutorAuthToken } from './auth';
 import { getTutorConfig } from './config';
 import type { TutorMessage } from './types';
 
@@ -46,6 +47,20 @@ export function buildRequestBody(model: string, messages: TutorMessage[]): Recor
  * Pull the incremental text out of one streamed chat-completions JSON payload.
  * Pure and exported so the SSE handling can be unit-tested without a network.
  */
+/**
+ * Pull a human-readable reason out of a failed proxy response. The proxy replies
+ * with `{ "error": "..." }`, so we surface that text directly (it's far more
+ * actionable than a bare status code). Returns null if there's nothing useful.
+ */
+export async function readErrorMessage(res: Response): Promise<string | null> {
+  try {
+    const data = (await res.json()) as { error?: unknown };
+    return typeof data.error === 'string' && data.error.trim() ? data.error.trim() : null;
+  } catch {
+    return null;
+  }
+}
+
 export function extractDelta(dataLine: string): string {
   try {
     const json = JSON.parse(dataLine) as {
@@ -59,27 +74,35 @@ export function extractDelta(dataLine: string): string {
 }
 
 /**
- * Send the conversation to an OpenAI-compatible chat-completions endpoint and
- * stream the assistant reply. Returns the full text once complete. All network
- * access is confined to this function so the rest of the feature can be tested
- * by mocking this module.
+ * Send the conversation to our `/api/tutor` proxy (which injects the secret key
+ * server-side and forwards to the OpenAI-compatible upstream) and stream the
+ * assistant reply. Returns the full text once complete. All network access is
+ * confined to this function so the rest of the feature can be tested by mocking
+ * this module.
  */
 export async function streamTutorReply(
   messages: TutorMessage[],
   options: StreamOptions = {},
 ): Promise<string> {
-  const { apiKey, baseUrl, model } = getTutorConfig();
-  if (!apiKey) {
-    throw new TutorError('The AI tutor is not configured. Add VITE_AI_TUTOR_API_KEY.');
+  const { enabled, endpoint, model } = getTutorConfig();
+  if (!enabled) {
+    throw new TutorError('The AI tutor is not enabled for this site.');
+  }
+
+  // The proxy authenticates the learner before spending credits, so we send the
+  // current user's Firebase ID token instead of a model API key.
+  const token = await getTutorAuthToken();
+  if (!token) {
+    throw new TutorError('Sign in to chat with the tutor.');
   }
 
   let res: Response;
   try {
-    res = await fetch(`${baseUrl}/chat/completions`, {
+    res = await fetch(endpoint, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        Authorization: `Bearer ${apiKey}`,
+        Authorization: `Bearer ${token}`,
       },
       body: JSON.stringify(buildRequestBody(model, messages)),
       signal: options.signal,
@@ -90,7 +113,8 @@ export async function streamTutorReply(
   }
 
   if (!res.ok) {
-    throw new TutorError(`Tutor service error (${res.status}). Please try again.`);
+    const detail = await readErrorMessage(res);
+    throw new TutorError(detail ?? `Tutor service error (${res.status}). Please try again.`);
   }
 
   // No stream body available (some proxies / test mocks): fall back to JSON.
