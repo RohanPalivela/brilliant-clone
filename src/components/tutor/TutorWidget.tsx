@@ -73,9 +73,22 @@ export function TutorWidget({
             animate={{ scale: 1, opacity: 1 }}
             exit={reduce ? undefined : { scale: 0, opacity: 0 }}
             transition={{ type: 'spring', stiffness: 400, damping: 28 }}
-            className="fixed bottom-5 right-5 z-30 flex h-14 w-14 items-center justify-center rounded-full bg-cta text-white shadow-card transition-colors hover:bg-cta-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
+            whileHover={reduce ? undefined : { scale: 1.04 }}
+            whileTap={reduce ? undefined : { scale: 0.96 }}
+            className="group fixed bottom-5 right-5 z-30 flex h-14 w-14 items-center justify-center rounded-full focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
           >
-            <Sparkles className="h-6 w-6" aria-hidden="true" />
+            {/* Living halo — Sage's calm presence (still under reduced motion). */}
+            <motion.span
+              aria-hidden="true"
+              className="absolute inset-0 -z-10 rounded-full bg-gradient-to-br from-[#4f46e5] to-[#8b5cf6] blur-lg"
+              initial={false}
+              animate={reduce ? { opacity: 0.35 } : { opacity: [0.3, 0.5, 0.3], scale: [1, 1.12, 1] }}
+              transition={reduce ? undefined : { duration: 4, repeat: Infinity, ease: 'easeInOut' }}
+            />
+            <span className="flex h-full w-full items-center justify-center rounded-full bg-gradient-to-br from-[#4f46e5] via-[#6d5ef0] to-[#8b5cf6] text-white shadow-card ring-1 ring-white/15">
+              <Sparkles className="h-6 w-6 transition-transform duration-300 group-hover:rotate-12" aria-hidden="true" />
+            </span>
+            <span className="absolute -right-0.5 -top-0.5 h-3.5 w-3.5 rounded-full border-2 border-canvas bg-correct" />
           </motion.button>
         )}
       </AnimatePresence>
@@ -89,23 +102,25 @@ export function TutorWidget({
             initial={reduce ? false : { y: 24, opacity: 0, scale: 0.98 }}
             animate={{ y: 0, opacity: 1, scale: 1 }}
             exit={reduce ? undefined : { y: 24, opacity: 0, scale: 0.98 }}
-            transition={{ duration: 0.2, ease: 'easeOut' }}
-            className="fixed bottom-5 right-5 z-30 flex h-[32rem] max-h-[calc(100vh-2.5rem)] w-[min(24rem,calc(100vw-2.5rem))] flex-col overflow-hidden rounded-2xl border border-line bg-surface shadow-card"
+            transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
+            className="fixed bottom-5 right-5 z-30 flex h-[34rem] max-h-[calc(100vh-2.5rem)] w-[min(25rem,calc(100vw-2.5rem))] flex-col overflow-hidden rounded-[20px] border border-line bg-surface shadow-card"
           >
             {/* Header */}
-            <header className="flex items-center gap-2 border-b border-line px-4 py-3">
-              <span className="flex h-8 w-8 items-center justify-center rounded-full bg-brand-soft text-brand">
-                <Sparkles className="h-4 w-4" aria-hidden="true" />
-              </span>
+            <header className="relative flex items-center gap-3 border-b border-line px-4 py-3">
+              <span aria-hidden="true" className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-brand/40 to-transparent" />
+              <SageMark size="sm" presence />
               <div className="min-w-0 flex-1">
-                <p className="truncate text-sm font-semibold text-ink">Sage · AI tutor</p>
-                <p className="truncate text-xs text-muted">{lesson.title}</p>
+                <div className="flex items-baseline gap-1.5">
+                  <p className="font-display text-base font-semibold leading-none text-ink">Sage</p>
+                  <span className="text-[0.65rem] font-semibold uppercase tracking-wide text-muted">AI tutor</span>
+                </div>
+                <p className="mt-1 truncate text-xs text-muted">{lesson.title}</p>
               </div>
               <button
                 type="button"
                 onClick={close}
                 aria-label="Close AI tutor"
-                className="rounded-full p-1.5 text-muted hover:bg-canvas hover:text-ink"
+                className="rounded-full p-1.5 text-muted transition-colors hover:bg-canvas hover:text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
               >
                 <X className="h-4 w-4" aria-hidden="true" />
               </button>
@@ -113,8 +128,8 @@ export function TutorWidget({
 
             {/* Activity safeguard badge */}
             {onActivity && (
-              <div className="flex items-center gap-1.5 bg-brand-soft/60 px-4 py-1.5 text-xs text-brand">
-                <ShieldCheck className="h-3.5 w-3.5" aria-hidden="true" />
+              <div className="flex items-center gap-1.5 border-b border-brand/10 bg-brand-soft/60 px-4 py-2 text-xs font-medium text-brand">
+                <ShieldCheck className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
                 Guided help only — I won’t give away the answer here.
               </div>
             )}
@@ -122,34 +137,52 @@ export function TutorWidget({
             {/* Messages */}
             <div
               ref={scrollRef}
-              className="flex-1 space-y-3 overflow-y-auto px-4 py-4"
+              className="flex-1 space-y-4 overflow-y-auto px-4 py-4"
             >
-              {turns.length === 0 && <EmptyState onActivity={onActivity} />}
-              {turns.map((turn) => (
-                <div
-                  key={turn.id}
-                  className={cn(
-                    'flex',
-                    turn.role === 'user' ? 'justify-end' : 'justify-start',
-                  )}
-                >
-                  <div
-                    className={cn(
-                      'max-w-[85%] whitespace-pre-wrap rounded-2xl px-3.5 py-2 text-sm leading-relaxed',
-                      turn.role === 'user'
-                        ? 'bg-cta text-white'
-                        : turn.error
-                          ? 'bg-wrong-soft text-wrong'
-                          : 'bg-canvas text-ink',
-                    )}
-                  >
-                    <MessageBody turn={turn} />
-                    {turn.nav && (
-                      <ResourceCard nav={turn.nav} onNavigate={onNavigate} />
-                    )}
-                  </div>
-                </div>
-              ))}
+              {turns.length === 0 ? (
+                <EmptyState
+                  onActivity={onActivity}
+                  disabled={isStreaming}
+                  onPrompt={(text) => void send(text)}
+                />
+              ) : (
+                turns.map((turn, i) => {
+                  const isUser = turn.role === 'user';
+                  // Group consecutive assistant turns under a single avatar gutter.
+                  const showAvatar =
+                    !isUser && (i === 0 || turns[i - 1].role !== 'assistant');
+                  return (
+                    <motion.div
+                      key={turn.id}
+                      initial={reduce ? false : { opacity: 0, y: 6 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.18, ease: 'easeOut' }}
+                      className={cn('flex items-end gap-2', isUser ? 'justify-end' : 'justify-start')}
+                    >
+                      {!isUser && (
+                        <span className="shrink-0">
+                          {showAvatar ? <SageMark size="xs" /> : <span className="block h-7 w-7" aria-hidden="true" />}
+                        </span>
+                      )}
+                      <div
+                        className={cn(
+                          'max-w-[80%] whitespace-pre-wrap rounded-2xl px-3.5 py-2.5 text-sm leading-relaxed',
+                          isUser
+                            ? 'rounded-br-md bg-cta text-white'
+                            : turn.error
+                              ? 'rounded-bl-md bg-wrong-soft text-wrong'
+                              : 'rounded-bl-md bg-canvas text-ink',
+                        )}
+                      >
+                        <MessageBody turn={turn} />
+                        {turn.nav && (
+                          <ResourceCard nav={turn.nav} onNavigate={onNavigate} />
+                        )}
+                      </div>
+                    </motion.div>
+                  );
+                })
+              )}
             </div>
 
             {/* Composer */}
@@ -158,9 +191,9 @@ export function TutorWidget({
                 e.preventDefault();
                 submit();
               }}
-              className="border-t border-line p-3"
+              className="border-t border-line bg-surface p-3"
             >
-              <div className="flex items-end gap-2">
+              <div className="flex items-end gap-2 rounded-2xl border border-line bg-canvas p-1.5 transition-colors focus-within:border-brand/60">
                 <textarea
                   value={draft}
                   onChange={(e) => setDraft(e.target.value)}
@@ -172,19 +205,29 @@ export function TutorWidget({
                   }}
                   disabled={isStreaming}
                   rows={1}
-                  placeholder="Ask for a hint…"
+                  placeholder={onActivity ? 'Ask for a hint…' : 'Ask Sage anything…'}
                   aria-label="Message the tutor"
-                  className="max-h-28 min-h-[2.5rem] flex-1 resize-none rounded-xl border border-line bg-canvas px-3 py-2 text-sm text-ink placeholder:text-muted focus-visible:outline-2 focus-visible:outline-offset-0 focus-visible:outline-brand disabled:opacity-60"
+                  className="max-h-28 min-h-[2.25rem] flex-1 resize-none bg-transparent px-2.5 py-1.5 text-sm text-ink placeholder:text-muted focus-visible:outline-none disabled:opacity-60"
                 />
                 <button
                   type="submit"
                   disabled={isStreaming || !draft.trim()}
                   aria-label="Send message"
-                  className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-cta text-white transition-colors hover:bg-cta-hover disabled:bg-line disabled:text-muted"
+                  className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-cta text-white transition-all hover:bg-cta-hover disabled:bg-line disabled:text-muted"
                 >
                   <Send className="h-4 w-4" aria-hidden="true" />
                 </button>
               </div>
+              <p
+                className={cn(
+                  'mt-1.5 px-1 text-[0.65rem] text-muted transition-opacity',
+                  draft.trim() ? 'opacity-100' : 'opacity-0',
+                )}
+                aria-hidden="true"
+              >
+                <kbd className="font-sans font-semibold text-ink-soft">Enter</kbd> to send ·{' '}
+                <kbd className="font-sans font-semibold text-ink-soft">Shift + Enter</kbd> for a new line
+              </p>
             </form>
           </motion.div>
         )}
@@ -193,15 +236,82 @@ export function TutorWidget({
   );
 }
 
-function EmptyState({ onActivity }: { onActivity: boolean }) {
+/**
+ * Sage's identity mark — a gradient "presence" used on the launcher, in the
+ * header, and as the assistant avatar so the tutor reads as one consistent
+ * character across the whole surface.
+ */
+function SageMark({
+  size = 'sm',
+  presence = false,
+}: {
+  size?: 'xs' | 'sm';
+  presence?: boolean;
+}) {
+  const box = size === 'xs' ? 'h-7 w-7' : 'h-9 w-9';
+  const icon = size === 'xs' ? 'h-3.5 w-3.5' : 'h-4 w-4';
   return (
-    <div className="mt-6 text-center text-sm text-muted">
-      <p className="font-semibold text-ink">Hi, I’m Sage 👋</p>
-      <p className="mt-1">
+    <span className="relative inline-flex shrink-0">
+      <span
+        className={cn(
+          'flex items-center justify-center rounded-full bg-gradient-to-br from-[#4f46e5] via-[#6d5ef0] to-[#8b5cf6] text-white ring-1 ring-white/15',
+          box,
+        )}
+      >
+        <Sparkles className={icon} aria-hidden="true" />
+      </span>
+      {presence && (
+        <span className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full border-2 border-surface bg-correct" />
+      )}
+    </span>
+  );
+}
+
+const ACTIVITY_PROMPTS = [
+  'I’m stuck — give me a nudge',
+  'Explain this idea again',
+  'What should I focus on?',
+];
+
+const LESSON_PROMPTS = [
+  'Summarize this lesson',
+  'Explain it more simply',
+  'Where did this come from?',
+];
+
+function EmptyState({
+  onActivity,
+  onPrompt,
+  disabled,
+}: {
+  onActivity: boolean;
+  onPrompt: (text: string) => void;
+  disabled: boolean;
+}) {
+  const prompts = onActivity ? ACTIVITY_PROMPTS : LESSON_PROMPTS;
+  return (
+    <div className="flex h-full flex-col items-center justify-center px-2 text-center">
+      <SageMark size="sm" />
+      <p className="mt-3 font-display text-base font-semibold text-ink">Hi, I’m Sage</p>
+      <p className="mx-auto mt-1 max-w-[18rem] text-sm leading-relaxed text-muted">
         {onActivity
           ? 'Stuck on this step? Ask me for a nudge and I’ll help you reason it out — without spoiling the answer.'
           : 'Ask me anything about this lesson. I can also walk you back to an earlier part if it helps.'}
       </p>
+      <div className="mt-4 flex w-full flex-col items-stretch gap-2">
+        {prompts.map((p) => (
+          <button
+            key={p}
+            type="button"
+            disabled={disabled}
+            onClick={() => onPrompt(p)}
+            className="flex items-center justify-between gap-2 rounded-xl border border-line bg-surface px-3.5 py-2 text-left text-sm font-medium text-ink transition-colors hover:border-brand/40 hover:bg-brand-soft/50 disabled:opacity-60 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
+          >
+            <span className="truncate">{p}</span>
+            <ArrowRight className="h-3.5 w-3.5 shrink-0 text-muted" aria-hidden="true" />
+          </button>
+        ))}
+      </div>
     </div>
   );
 }
