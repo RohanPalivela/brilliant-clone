@@ -9,7 +9,7 @@ import { stripNavForDisplay } from '../../lib/aiTutor/sanitize';
 import { isTutorConfigured } from '../../lib/aiTutor/config';
 import { useTutor } from '../../hooks/useTutor';
 import { useTutorChat } from '../../hooks/useTutorChat';
-import { renderInline } from '../../lib/renderInline';
+import { renderMarkdownInline } from '../../lib/renderInline';
 import { cn } from '../../lib/cn';
 
 interface TutorWidgetProps {
@@ -317,16 +317,17 @@ function EmptyState({
 }
 
 /**
- * Render a chat turn's body. Assistant replies are run through `renderInline` so
- * `backtick` spans become formatted code chips (e.g. `reachable[3]`); the
- * container's `whitespace-pre-wrap` preserves the model's line breaks. Empty
- * pending assistant turns show the typing indicator.
+ * Render a chat turn's body. Assistant replies are run through
+ * `renderMarkdownInline` so inline markdown the model emits — ``code``,
+ * `**bold**`, `*italic*` — renders as real formatting instead of literal
+ * asterisks/backticks; the container's `whitespace-pre-wrap` preserves the
+ * model's line breaks. Empty pending assistant turns show the typing indicator.
  */
 function MessageBody({ turn }: { turn: ChatTurn }) {
   const display = stripNavForDisplay(turn.text);
   if (!display) return turn.pending ? <TypingDots /> : null;
   if (turn.role === 'assistant' && !turn.error) {
-    return <>{renderInline(display, turn.id)}</>;
+    return <>{renderMarkdownInline(display, turn.id)}</>;
   }
   return <>{display}</>;
 }

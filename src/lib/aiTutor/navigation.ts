@@ -61,6 +61,7 @@ export function canNavigateToLesson(
 export function resolveNavigation(
   course: Course,
   currentLesson: Lesson,
+  currentSlideIndex: number,
   directive: RawNavDirective | null,
 ): NavigationTarget | null {
   // This decides whether the app *acts* on model output, so it must never
@@ -74,6 +75,11 @@ export function resolveNavigation(
 
     const slideIndex = lesson.slides.findIndex((s) => s.id === directive.slideId);
     if (slideIndex < 0) return null;
+
+    // Never let a "revisit" jump skip the learner forward. Within the current
+    // lesson the target must be a step they've already passed; later lessons are
+    // already blocked by canNavigateToLesson above.
+    if (lesson.id === currentLesson.id && slideIndex >= currentSlideIndex) return null;
 
     // Ground the highlight in the truth source: only honor it when it appears
     // verbatim on the destination slide. A hallucinated phrase is dropped.

@@ -100,9 +100,13 @@ describe('canNavigateToLesson', () => {
   });
 });
 
+// The learner is on the last slide of the current lesson for most cases, so an
+// earlier same-lesson slide is a valid "behind them" target.
+const HERE = 2;
+
 describe('resolveNavigation (safety boundary)', () => {
   it('resolves a valid earlier-lesson target to a concrete index', () => {
-    const target = resolveNavigation(course, current, {
+    const target = resolveNavigation(course, current, HERE, {
       lessonId: 'l1',
       slideId: 'l1s2',
       reason: 'recap',
@@ -116,17 +120,28 @@ describe('resolveNavigation (safety boundary)', () => {
     });
   });
 
-  it('resolves a same-lesson target', () => {
-    const target = resolveNavigation(course, current, {
+  it('resolves a same-lesson target the learner has already passed', () => {
+    const target = resolveNavigation(course, current, HERE, {
       lessonId: 'l2',
-      slideId: 'l2s3',
+      slideId: 'l2s1',
     });
-    expect(target?.slideIndex).toBe(2);
+    expect(target?.slideIndex).toBe(0);
+  });
+
+  it('rejects a same-lesson jump to the current step or a later step (no skipping ahead)', () => {
+    // Current step itself.
+    expect(
+      resolveNavigation(course, current, 1, { lessonId: 'l2', slideId: 'l2s2' }),
+    ).toBeNull();
+    // A step further ahead in this same lesson.
+    expect(
+      resolveNavigation(course, current, 1, { lessonId: 'l2', slideId: 'l2s3' }),
+    ).toBeNull();
   });
 
   it('carries a highlight that appears verbatim on the destination slide', () => {
     // slide 'l1s1' has heading text 'l1s1', so that phrase is grounded.
-    const target = resolveNavigation(course, current, {
+    const target = resolveNavigation(course, current, HERE, {
       lessonId: 'l1',
       slideId: 'l1s1',
       highlight: '  l1s1  ',
@@ -135,7 +150,7 @@ describe('resolveNavigation (safety boundary)', () => {
   });
 
   it('drops a highlight phrase that is NOT on the destination slide (grounding)', () => {
-    const target = resolveNavigation(course, current, {
+    const target = resolveNavigation(course, current, HERE, {
       lessonId: 'l1',
       slideId: 'l1s1',
       highlight: 'a sentence the model hallucinated',
@@ -145,7 +160,7 @@ describe('resolveNavigation (safety boundary)', () => {
   });
 
   it('drops an empty highlight', () => {
-    const target = resolveNavigation(course, current, {
+    const target = resolveNavigation(course, current, HERE, {
       lessonId: 'l1',
       slideId: 'l1s1',
       highlight: '   ',
@@ -155,31 +170,34 @@ describe('resolveNavigation (safety boundary)', () => {
 
   it('never throws — malformed input fails in place to null', () => {
     expect(
-      resolveNavigation(course, current, { lessonId: 123 as unknown as string, slideId: 'l1s1' }),
+      resolveNavigation(course, current, HERE, {
+        lessonId: 123 as unknown as string,
+        slideId: 'l1s1',
+      }),
     ).toBeNull();
   });
 
   it('rejects a forward/locked lesson even if the slide id is valid', () => {
     expect(
-      resolveNavigation(course, current, { lessonId: 'l3', slideId: 'l3s1' }),
+      resolveNavigation(course, current, HERE, { lessonId: 'l3', slideId: 'l3s1' }),
     ).toBeNull();
   });
 
   it('rejects an unknown lesson id', () => {
     expect(
-      resolveNavigation(course, current, { lessonId: 'ghost', slideId: 'x' }),
+      resolveNavigation(course, current, HERE, { lessonId: 'ghost', slideId: 'x' }),
     ).toBeNull();
   });
 
   it('rejects an unknown slide id in a valid lesson', () => {
     expect(
-      resolveNavigation(course, current, { lessonId: 'l1', slideId: 'ghost' }),
+      resolveNavigation(course, current, HERE, { lessonId: 'l1', slideId: 'ghost' }),
     ).toBeNull();
   });
 
   it('rejects null / incomplete directives', () => {
-    expect(resolveNavigation(course, current, null)).toBeNull();
-    expect(resolveNavigation(course, current, { lessonId: 'l1' })).toBeNull();
-    expect(resolveNavigation(course, current, { slideId: 'l1s1' })).toBeNull();
+    expect(resolveNavigation(course, current, HERE, null)).toBeNull();
+    expect(resolveNavigation(course, current, HERE, { lessonId: 'l1' })).toBeNull();
+    expect(resolveNavigation(course, current, HERE, { slideId: 'l1s1' })).toBeNull();
   });
 });

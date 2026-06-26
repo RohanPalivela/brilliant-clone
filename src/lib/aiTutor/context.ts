@@ -11,16 +11,24 @@ function excerpt(text: string, max = 320): string {
 }
 
 /**
- * The slides the tutor may send the learner to: every slide in the current
- * lesson plus every slide in earlier lessons (which are, by the app's
- * sequential-unlock rule, already available). Forward lessons are intentionally
- * excluded so the tutor can never push a learner into locked content.
+ * The slides the tutor may send the learner *back* to: every slide in earlier
+ * lessons plus the slides in the current lesson that the learner has already
+ * passed (strictly before `slideIndex`). Forward lessons are excluded so the
+ * tutor can never push into locked content — and, crucially, slides *after* the
+ * current step in this same lesson are excluded too, so a "revisit" suggestion
+ * can never quietly skip the learner ahead into material they haven't reached.
  */
-export function buildReachableSlides(course: Course, lesson: Lesson): ReachableSlide[] {
+export function buildReachableSlides(
+  course: Course,
+  lesson: Lesson,
+  slideIndex: number,
+): ReachableSlide[] {
   const out: ReachableSlide[] = [];
   for (const l of course.lessons) {
     if (l.order > lesson.order) continue;
     l.slides.forEach((s, idx) => {
+      // Within the current lesson, only earlier steps are "behind" the learner.
+      if (l.id === lesson.id && idx >= slideIndex) return;
       out.push({
         lessonId: l.id,
         lessonTitle: l.title,
@@ -69,7 +77,7 @@ export function buildTutorContext(
     answer,
     solvedCorrectly,
     solution: describeSolution(slide),
-    reachableSlides: buildReachableSlides(course, lesson),
+    reachableSlides: buildReachableSlides(course, lesson, slideIndex),
     upcomingLessons: buildUpcomingLessons(course, lesson),
   };
 }
@@ -111,6 +119,8 @@ export function buildSystemPrompt(ctx: TutorContext, nonce?: string): string {
       : '5. This slide is explanatory (not graded). You may explain the concept directly, but still keep it tight and encourage the learner to think.',
     "6. The learner's OWN current input (shown below under \"Learner's current input\") belongs to them. You may ALWAYS tell them exactly what they have entered or selected and discuss it — e.g. \"you picked '4 and 2'\" — and use it to explain why it's right or wrong. This is NOT the gated answer: only the correct/ground-truth answer stays hidden on an activity. If they have not entered anything yet, just say so.",
     '7. Keep replies short (usually 2–5 sentences). Be encouraging and specific. Use plain language.',
+    '7a. Stay grounded to where the learner actually is. When they ask you to explain the current step or "explain it more simply", explain the PREMISE of what is in front of them right now — what the slide is asking and why — using only ideas already introduced up to this point. Do NOT pre-teach mechanics, vocabulary, or solution techniques from steps they have not reached yet (e.g. don\'t introduce the "look back from N−3 / N−5" recurrence on the very first slide before it has been presented). Meet them at the current step.',
+    '7b. FORMATTING: your reply is shown in a chat bubble that renders only INLINE markdown — `**bold**`, `*italic*`, and `` `code` ``. Use these sparingly when they aid clarity. Do NOT use headings (#), bullet/numbered lists, tables, blockquotes, links, or images: that block markup will not render and the learner will see raw symbols. Write in short plain sentences; rely on line breaks, not list markup.',
     '',
     '## Where the learner is right now',
     `- Lesson ${ctx.lessonOrder}: "${ctx.lessonTitle}" — slide ${ctx.slideIndex + 1} of ${ctx.totalSlides}.`,

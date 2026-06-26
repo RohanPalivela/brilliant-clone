@@ -1,14 +1,61 @@
 import type { ReactNode } from 'react';
 
+const CODE_CHIP_CLASS =
+  'mx-0.5 rounded border border-code-border bg-code-bg px-1.5 py-0.5 align-middle font-mono text-[0.85em] text-code-text';
+
+/**
+ * Inline-markup tokenizer for *tutor* messages: turns ``code``, `**bold**`, and
+ * `*italic*` into real elements so the learner never sees raw markdown like
+ * `**Making Change**`. Emphasis delimiters must hug non-whitespace (CommonMark
+ * style), which keeps arithmetic like `3 * 5` from being misread as italics.
+ * Code spans are matched first and rendered atomically (never re-parsed inside).
+ */
+const MARKDOWN_INLINE_RE =
+  /(`[^`]+`)|(\*\*(?=\S)[^*]+?(?<=\S)\*\*)|(\*(?=\S)[^*]+?(?<=\S)\*)/g;
+
+export function renderMarkdownInline(text: string, keyPrefix: string): ReactNode[] {
+  const nodes: ReactNode[] = [];
+  const re = new RegExp(MARKDOWN_INLINE_RE);
+  let last = 0;
+  let token = 0;
+  let match: RegExpExecArray | null;
+
+  const pushText = (slice: string) => {
+    if (slice) nodes.push(<span key={`${keyPrefix}-t${token++}`}>{slice}</span>);
+  };
+
+  while ((match = re.exec(text)) !== null) {
+    pushText(text.slice(last, match.index));
+    const raw = match[0];
+    if (raw.startsWith('`')) {
+      nodes.push(
+        <code key={`${keyPrefix}-c${token++}`} className={CODE_CHIP_CLASS}>
+          {raw.slice(1, -1)}
+        </code>,
+      );
+    } else if (raw.startsWith('**')) {
+      nodes.push(
+        <strong key={`${keyPrefix}-b${token++}`} className="font-semibold text-ink">
+          {raw.slice(2, -2)}
+        </strong>,
+      );
+    } else {
+      nodes.push(
+        <em key={`${keyPrefix}-i${token++}`}>{raw.slice(1, -1)}</em>,
+      );
+    }
+    last = match.index + raw.length;
+  }
+  pushText(text.slice(last));
+  return nodes;
+}
+
 /** Split text on `backtick` spans, rendering each span as a code chip. */
 function renderCodeTokens(text: string, keyPrefix: string): ReactNode[] {
   return text.split(/(`[^`]+`)/g).map((part, i) => {
     if (part.length >= 2 && part.startsWith('`') && part.endsWith('`')) {
       return (
-        <code
-          key={`${keyPrefix}-${i}`}
-          className="mx-0.5 rounded border border-code-border bg-code-bg px-1.5 py-0.5 align-middle font-mono text-[0.85em] text-code-text"
-        >
+        <code key={`${keyPrefix}-${i}`} className={CODE_CHIP_CLASS}>
           {part.slice(1, -1)}
         </code>
       );

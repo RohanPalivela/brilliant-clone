@@ -1,6 +1,31 @@
 import { describe, it, expect } from 'vitest';
 import { render } from '@testing-library/react';
-import { renderInline, highlightPlain } from './renderInline';
+import { renderInline, renderMarkdownInline, highlightPlain } from './renderInline';
+
+describe('renderMarkdownInline', () => {
+  it('renders **bold** as <strong>, not literal asterisks', () => {
+    const { container } = render(<p>{renderMarkdownInline('see **Making Change** later', 'k')}</p>);
+    const strong = container.querySelector('strong');
+    expect(strong?.textContent).toBe('Making Change');
+    expect(container.textContent).toBe('see Making Change later');
+  });
+
+  it('renders *italic* as <em>', () => {
+    const { container } = render(<p>{renderMarkdownInline('this is *important* stuff', 'k')}</p>);
+    expect(container.querySelector('em')?.textContent).toBe('important');
+  });
+
+  it('renders `code` spans as code chips', () => {
+    const { container } = render(<p>{renderMarkdownInline('use `reachable[3]` here', 'k')}</p>);
+    expect(container.querySelector('code')?.textContent).toBe('reachable[3]');
+  });
+
+  it('leaves spaced arithmetic like 3 * 5 alone (no stray italics)', () => {
+    const { container } = render(<p>{renderMarkdownInline('go up 3 * 5 steps', 'k')}</p>);
+    expect(container.querySelector('em')).toBeNull();
+    expect(container.textContent).toBe('go up 3 * 5 steps');
+  });
+});
 
 describe('renderInline', () => {
   it('renders backtick spans as code chips', () => {

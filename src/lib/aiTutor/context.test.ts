@@ -71,12 +71,24 @@ const course: Course = {
 };
 
 describe('buildReachableSlides', () => {
-  it('includes the current and earlier lessons but excludes later (locked) ones', () => {
-    const reachable = buildReachableSlides(course, lessonB);
+  it('includes earlier lessons and already-passed steps, but excludes later (locked) ones', () => {
+    // Learner is on slide index 1 of lessonB, so l2s1 (index 0) is behind them.
+    const reachable = buildReachableSlides(course, lessonB, 1);
     const lessonIds = new Set(reachable.map((s) => s.lessonId));
     expect(lessonIds.has('l1')).toBe(true);
     expect(lessonIds.has('l2')).toBe(true);
     expect(lessonIds.has('l3')).toBe(false);
+  });
+
+  it('excludes the current step and any later step in the current lesson (no skipping ahead)', () => {
+    const reachable = buildReachableSlides(course, lessonB, 0);
+    const ids = reachable.map((s) => s.slideId);
+    // On the very first step of lessonB, no slide in lessonB is "behind" yet…
+    expect(ids).not.toContain('l2s1');
+    expect(ids).not.toContain('l2s2');
+    // …but earlier lessons remain reachable for review.
+    expect(ids).toContain('l1s1');
+    expect(ids).toContain('l1s2');
   });
 });
 

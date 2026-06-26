@@ -89,7 +89,8 @@ export function useTutorChat({ context, course, lesson }: UseTutorChatArgs) {
         });
 
         const { text: cleanText, directive } = parseReply(full);
-        const nav = resolveNavigation(course, lesson, directive) ?? undefined;
+        const nav =
+          resolveNavigation(course, lesson, context.slideIndex, directive) ?? undefined;
         setTurns((prev) =>
           prev.map((t) =>
             t.id === assistantId
