@@ -2,7 +2,7 @@
 
 > **Tagline:** _Learn by doing._
 
-**Deployed link:** [brilliant-clone-three.vercel.app](url)
+**Deployed link:** [brilliant-clone-three.vercel.app](https://brilliant-clone-three.vercel.app/)
 
 ## What it is
 
