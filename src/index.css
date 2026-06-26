@@ -21,6 +21,10 @@
   --color-wrong-soft: #fee2e2;
   --color-flame: #f97316;
 
+  /* Tutor spotlight: a warm marker the AI tutor uses to point at a phrase. */
+  --color-highlight: #fde68a;
+  --color-highlight-ink: #422006;
+
   --color-cta: #0b1020;
   --color-cta-hover: #1c2333;
 
@@ -63,6 +67,9 @@
   --color-wrong: #f87171;
   --color-wrong-soft: #3a1212;
   --color-flame: #fb923c;
+
+  --color-highlight: #b8860b;
+  --color-highlight-ink: #fdf6e3;
 
   /* Primary CTA blends into a near-black surface, so lift it to brand indigo. */
   --color-cta: #5b54e6;
@@ -158,6 +165,31 @@ body,
 .draw-arrow {
   stroke-dasharray: 1;
   animation: draw-arrow 0.6s ease-out both;
+}
+
+/* Tutor spotlight: the AI tutor can mark a useful phrase on the slide it sends
+   the learner to. A brief sweep draws the eye, then it settles into a calm
+   highlight so the phrase stays findable. */
+@keyframes tutor-highlight-sweep {
+  0% {
+    background-size: 0% 100%;
+  }
+  100% {
+    background-size: 100% 100%;
+  }
+}
+
+.tutor-highlight {
+  color: var(--color-highlight-ink);
+  background-color: var(--color-highlight);
+  background-image: linear-gradient(var(--color-highlight), var(--color-highlight));
+  background-repeat: no-repeat;
+  background-size: 100% 100%;
+  border-radius: 4px;
+  padding: 0.05em 0.25em;
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+  animation: tutor-highlight-sweep 0.7s ease-out both;
 }
 
 @media (prefers-reduced-motion: reduce) {

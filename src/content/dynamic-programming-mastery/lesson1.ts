@@ -66,9 +66,9 @@ export const lesson1: Lesson = {
           'Guessing your way up works for one short staircase but is fiddly and easy to get stuck on. Next we’ll see why brute force doesn’t scale — and find a smarter way.',
       },
       validation: { type: 'jumpPath', jumpSizes: [3, 5], target: 11 },
-      hint: 'It takes three jumps that add to 11. Two of one size and one of the other — try starting with the small ones.',
+      hint: 'Every landing spot is some 3s and some 5s added together. Try working out how many small jumps fit: if you use one big jump, how much is left to cover with 3s? If you use none, can 3s alone ever hit 11?',
       explanationOnWrong:
-        'Land on 11 exactly: 3 + 3 + 5 = 11 (order doesn’t matter). Every move must be +3 or +5, and you can never step past the goal — if you’re stranded (say on 10 after 5 + 5), reset and try a different mix.',
+        'Two things trip people up here: you have to land on 11 exactly (overshooting is blocked), and only the count of each jump matters, not their order. If a run strands you with no legal move, reset and change how many 3s you use. Ask yourself: which number of 3s leaves a remainder you can finish with a single 5?',
     },
     {
       id: 'm1-s3',
@@ -130,9 +130,9 @@ export const lesson1: Lesson = {
         ],
       },
       validation: { type: 'multipleChoice', correctIds: ['fourtwo'] },
-      hint: 'You can only arrive at a step by jumping +3 or +5 onto it. Subtract each jump from 7 to find the only two steps you could have come from.',
+      hint: 'You can only land on a step by jumping onto it, so you must have come from a step below. Subtract each jump from 7 — where do those launch points land?',
       explanationOnWrong:
-        'Subtract each jump from the step itself: 7 − 3 = 4 and 7 − 5 = 2. Those are the only steps you could jump from, not the jump sizes. (Here both `step 4` and `step 2` happen to be ✗, so `step 7` is ✗ too.)',
+        'A common slip is to pick 3 and 5 themselves, but those are the jump sizes — how far you look back — not steps you can stand on. Work out 7 minus each jump to find the two steps you could have launched from, and remember you can never arrive from a step above 7.',
     },
     {
       id: 'm1-s7',
@@ -149,9 +149,9 @@ export const lesson1: Lesson = {
           'Let’s warm up together. Steps 0 through 6 are already solved and locked for you. Finish steps 7 to 11: for each one, follow its arrows to the step 3 below and the step 5 below — mark it ✓ if either is ✓, otherwise ✗. Tap a step once for ✓, tap again for ✗.',
       },
       validation: { type: 'reachability', jumpSizes: [3, 5], steps: 11, target: 11 },
-      hint: 'A step is ✓ only if (step − 3) or (step − 5) is ✓. The arrows point at exactly those two steps below.',
+      hint: 'For each step, follow its two arrows down to (step − 3) and (step − 5). Mark it ✓ the moment one of those is ✓ — you never need to look anywhere else.',
       explanationOnWrong:
-        'Work upward from step 7. Each step is ✓ only when step − 3 or step − 5 is ✓ — the locked cells 0..6 are already correct, so just read them.',
+        'Re-check the steps you marked ✗ first — that is where this usually goes wrong. For each one, read only the two steps its arrows point to, (step − 3) and (step − 5): if even one is ✓, this step has to be ✓ too. Steps 0–6 are locked and correct, so trust them and build upward from there.',
     },
     {
       id: 'm1-s8',
@@ -167,9 +167,9 @@ export const lesson1: Lesson = {
           'Now the whole thing, on your own — solve the staircase all the way to step 11. Start at the bottom (step 0 is already ✓) and work upward, one step at a time. Tap a step once to mark it ✓ if it can be reached, tap again for ✗ if it can’t. A step is ✓ only when the step 3 below or 5 below it is ✓.',
       },
       validation: { type: 'reachability', jumpSizes: [3, 5], steps: 11, target: 11 },
-      hint: 'A step is ✓ only if (step − 3) or (step − 5) is itself ✓. Work upward from step 0, which is always ✓.',
+      hint: 'Go strictly bottom to top so every step you need is already decided. Step 0 is ✓ because you start there; after that, a step is ✓ only if (step − 3) or (step − 5) is ✓.',
       explanationOnWrong:
-        'Not quite. Start at step 0 (always ✓) and work upward: each step is ✓ only when step − 3 or step − 5 is ✓.',
+        'Work bottom to top rather than jumping around — an early mistake low on the staircase ripples upward into every step that depends on it. For each step, look only at (step − 3) and (step − 5): ✓ if either is ✓, otherwise ✗. If both of those land below step 0 they do not exist, so that step stays ✗. Re-scan your lowest ✓ marks first.',
     },
     {
       id: 'm1-s9',

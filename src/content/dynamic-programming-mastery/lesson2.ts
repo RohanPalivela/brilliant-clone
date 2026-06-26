@@ -75,9 +75,9 @@ export const lesson2: Lesson = {
         ],
       },
       validation: { type: 'multipleChoice', correctIds: ['fivethree'] },
-      hint: 'Subtract each jump from 8, exactly like subtracting a jump from a step. Which two indices do you land on?',
+      hint: 'A cell becomes 1 only because a jump landed on it, so look backward, not forward. Subtract each jump from 8 — which two indices does that point to?',
       explanationOnWrong:
-        'Same look-back as the stairs: 8 − 3 = 5 and 8 − 5 = 3. If either reachable[5] or reachable[3] is 1, then reachable[8] is 1. You look backward (subtract a jump), never forward.',
+        'These are not the neighbours 7 and 6, and not where a jump from 8 would send you (11 and 13) — a cell is decided by where you jumped from, never where you could go next. Subtract each jump from 8 to find the two earlier cells you read; if either is 1, then reachable[8] is 1.',
     },
     {
       id: 'm2-s2c',
@@ -94,9 +94,9 @@ export const lesson2: Lesson = {
           'With jumps {3, 5} the two cells you read aren’t neighbors — they’re scattered. That’s the recurrence: subtract a jump, never scan forward.',
       },
       validation: { type: 'range', correctIndices: [4, 6] },
-      hint: 'Subtract each jump from 9: 9 − 3 and 9 − 5. Tap exactly those two cells.',
+      hint: 'reachable[9] can only be set by a jump that lands on 9. Subtract each jump from 9 and tap the two earlier cells you would have jumped from.',
       explanationOnWrong:
-        'reachable[9] reads exactly 9 − 3 = 6 and 9 − 5 = 4 — never the cells above it, and never the jump sizes (3 and 5) themselves. Tap cells 6 and 4.',
+        'Two common slips: tapping the jump sizes 3 and 5 instead of the cells you would jump from, or tapping cells above 9. A jump has to land on 9, so the cells it reads are 9 minus each jump — work those out and tap exactly those two.',
     },
     {
       id: 'm2-s3',
@@ -115,9 +115,9 @@ export const lesson2: Lesson = {
           'Now the full row. reachable[0..6] is already filled in for you. Finish reachable[7..11]: for each cell i, read reachable[i − 3] and reachable[i − 5] — if either is 1, this cell is 1. Tap a cell to set it to 1, tap again for 0. Never re-trace from the ground; just reuse the earlier cells.',
       },
       validation: { type: 'reachability', jumpSizes: [3, 5], steps: 11, target: 11 },
-      hint: 'For each remaining cell i, just read reachable[i − 3] and reachable[i − 5]. If either is 1, cell i is 1.',
+      hint: 'Take the cells in order. For each one, read reachable[i − 3] and reachable[i − 5] — if either is 1, cell i is 1. You only ever look two and four cells back.',
       explanationOnWrong:
-        'Check each new cell against its two predecessors: i − 3 and i − 5. The earlier cells are already correct — reuse them, don’t recompute.',
+        'For any cell that is off, name its two predecessors — i − 3 and i − 5 — and read their values: cell i is 1 if either is 1, otherwise 0. The cells 0–6 are already filled and correct, so reuse them instead of re-tracing jumps from the ground.',
     },
     {
       id: 'm2-s4',
@@ -149,9 +149,9 @@ export const lesson2: Lesson = {
         ],
       },
       validation: { type: 'multipleChoice', correctIds: ['reuse'] },
-      hint: 'Once reachable[6] is written down, how many times do you need to figure it out again?',
+      hint: 'Once you have written reachable[6] into the array, how many times do you ever have to figure it out again?',
       explanationOnWrong:
-        'Each cell is computed once and then reused. The array saves you from re-deriving answers you already have — that reuse is the whole point of tabulation.',
+        'You still need the jump sizes and the base case at index 0, and the array is clearly less work, not the same — so those answers do not fit. The thing it lets you skip is recomputation: once a cell is written down, every later cell just reads it instead of re-deriving it from scratch.',
     },
     {
       id: 'm2-s6',

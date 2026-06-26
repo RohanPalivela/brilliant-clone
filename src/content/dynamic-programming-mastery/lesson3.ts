@@ -78,9 +78,9 @@ export const lesson3: Lesson = {
         ],
       },
       validation: { type: 'multipleChoice', correctIds: ['predecessors'] },
-      hint: 'You reach step 6 by jumping up from below it. Subtract each allowed jump from 6 to find where you’d have come from.',
+      hint: 'You land on step 6 by jumping up from below it. There are three allowed jumps now — subtract each one from 6 to find the steps you could have come from.',
       explanationOnWrong:
-        'Decide a step by subtracting each jump from it: 6 − 2 = 4, 6 − 3 = 3, 6 − 4 = 2. Step 6 is reachable if any of steps 4, 3, or 2 is. The jump sizes tell you how far to look back, not which step you start from.',
+        'With three jump sizes there are three places to look back, not two. Watch out: the answer is not the sizes 2, 3, 4 themselves — those tell you how far to look, not which step you stand on. Subtract each jump from 6 to find the steps you could have launched from, and step 6 is reachable if any of them is.',
     },
     {
       id: 'm3-s3b',
@@ -97,9 +97,9 @@ export const lesson3: Lesson = {
           'Three jumps, so three look-backs — and because 2, 3, 4 are consecutive, the steps you tap happen to sit side by side.',
       },
       validation: { type: 'range', correctIndices: [3, 4, 5] },
-      hint: 'Subtract each jump from 7: 7 − 2, 7 − 3, and 7 − 4.',
+      hint: 'Three jumps means three look-backs — so you should tap exactly three steps. Subtract each jump from 7, one tap per jump.',
       explanationOnWrong:
-        'Step 7 looks back at 7 − 2 = 5, 7 − 3 = 4, and 7 − 4 = 3 — tap steps 5, 4, and 3. Not the jump sizes themselves, and never the steps above 7.',
+        'Check that you tapped exactly three steps, one for each jump. Subtract each jump from 7 to find the steps you would launch from — do not tap the jump sizes 2, 3, 4 themselves, and never a step above 7.',
     },
     {
       id: 'm3-s5',
@@ -137,9 +137,9 @@ export const lesson3: Lesson = {
         ],
       },
       validation: { type: 'multipleChoice', correctIds: ['dense'] },
-      hint: 'Think about the largest gap that could ever form between reachable steps when the smallest jump is just 2.',
+      hint: 'Imagine the same {2, 3, 4} jumps on a much taller staircase — would gaps suddenly appear? Think about the biggest gap that could ever open up when your smallest jump is only 2.',
       explanationOnWrong:
-        'It’s the jump set. With small, consecutive jumps {2, 3, 4}, every step from 2 upward has a reachable step 2, 3, or 4 below it, so gaps can’t form. Sparser jumps — like {3, 7} next lesson — leave many dead ends.',
+        'It is not the staircase’s height or the sweep direction — a taller staircase with the same jumps would still have almost no gaps. The cause is the jump set: when the smallest jump is 2 and the sizes are consecutive, a reachable step is never far below, so dead ends cannot form. Picture sparse jumps like {3, 7} instead and you would see many more gaps.',
     },
     {
       id: 'm3-s6',

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Navigate, useParams } from 'react-router-dom';
+import { Navigate, useLocation, useParams } from 'react-router-dom';
 import { getLesson } from '../content';
 import { useAuth } from '../hooks/useAuth';
 import { startLesson, getLessonProgress } from '../data/progressService';
@@ -12,8 +12,19 @@ interface Resume {
   completed: string[];
 }
 
+interface TutorJumpState {
+  /** Slide index the tutor sent the learner to. */
+  tutorInitialSlide?: number;
+  /** Read-only review visit (don't write progress). */
+  review?: boolean;
+  /** A phrase to spotlight on the destination slide. */
+  tutorHighlight?: string;
+}
+
 export function LessonPlayerPage() {
   const { courseId, lessonId } = useParams();
+  const location = useLocation();
+  const jump = (location.state as TutorJumpState | null) ?? null;
   const { user } = useAuth();
   const found = courseId && lessonId ? getLesson(courseId, lessonId) : undefined;
 
@@ -65,13 +76,29 @@ export function LessonPlayerPage() {
     return <LoadingScreen label="Loading lesson…" />;
   }
 
+  // A tutor jump opens a specific slide without touching saved progress: the
+  // viewed slide is the jump target, but the *furthest reached* stays at the
+  // genuinely-saved position so progress can never be inflated by a review.
+  const total = found.lesson.slides.length;
+  const hasJump =
+    typeof jump?.tutorInitialSlide === 'number' && jump.tutorInitialSlide >= 0;
+  const jumpIndex = hasJump
+    ? Math.min(jump!.tutorInitialSlide!, total - 1)
+    : null;
+  const initialSlideIndex = jumpIndex ?? resume.index;
+  const reviewMode = hasJump && !!jump?.review;
+  const initialHighlight = hasJump ? jump?.tutorHighlight : undefined;
+
   return (
     <LessonPlayer
       key={found.lesson.id}
       course={found.course}
       lesson={found.lesson}
-      initialSlideIndex={resume.index}
+      initialSlideIndex={initialSlideIndex}
+      initialMaxReached={resume.index}
       initialCompletedSlideIds={resume.completed}
+      reviewMode={reviewMode}
+      initialHighlight={initialHighlight}
     />
   );
 }

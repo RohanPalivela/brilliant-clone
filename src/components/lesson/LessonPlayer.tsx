@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { motion, useReducedMotion } from 'framer-motion';
+import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import { X, Lightbulb, ArrowRight, ArrowLeft, Check } from 'lucide-react';
 import type { Course, Lesson, Slide, SlideAnswer } from '../../types/content';
+import type { NavigationTarget } from '../../lib/aiTutor/types';
 import { defaultAnswer } from '../../lib/answers';
 import { validateAnswer } from '../../lib/validation';
 import {
@@ -12,17 +13,30 @@ import {
   type LessonCompletionResult,
 } from '../../data/progressService';
 import { useAuth } from '../../hooks/useAuth';
+import { useTutor } from '../../hooks/useTutor';
 import { Button } from '../ui/Button';
 import { ProgressBar } from '../ui/ProgressBar';
 import { FeedbackBanner, type FeedbackState } from '../ui/FeedbackBanner';
 import { SlideView } from './SlideView';
 import { CongratsScreen } from './CongratsScreen';
+import { TutorWidget } from '../tutor/TutorWidget';
+import { TutorReturnPill } from '../tutor/TutorReturnPill';
 
 interface LessonPlayerProps {
   course: Course;
   lesson: Lesson;
   initialSlideIndex: number;
   initialCompletedSlideIds: string[];
+  /** Furthest slide genuinely reached (drives saved progress). Defaults to the
+   *  initial slide. Set separately from `initialSlideIndex` so a tutor "review"
+   *  jump can open a deep slide without inflating saved progress. */
+  initialMaxReached?: number;
+  /** When true the player is a read-only review visit (e.g. the tutor sent the
+   *  learner back to an earlier lesson): no progress is written or completed. */
+  reviewMode?: boolean;
+  /** A phrase to spotlight on the initial slide (set when the tutor jumped here
+   *  across lessons with a highlight). */
+  initialHighlight?: string;
 }
 
 function requiresAnswer(slide: Slide): boolean {
@@ -40,10 +54,14 @@ export function LessonPlayer({
   lesson,
   initialSlideIndex,
   initialCompletedSlideIds,
+  initialMaxReached,
+  reviewMode = false,
+  initialHighlight,
 }: LessonPlayerProps) {
   const { user } = useAuth();
   const navigate = useNavigate();
   const reduce = useReducedMotion();
+  const { returnPoint, setReturnPoint } = useTutor();
 
   const total = lesson.slides.length;
   const startIndex = Math.min(Math.max(0, initialSlideIndex), total - 1);
@@ -51,9 +69,20 @@ export function LessonPlayer({
   // Direction of the last navigation: +1 forward, -1 back. Drives slide motion.
   const [dir, setDir] = useState(1);
   const [slideIndex, setSlideIndex] = useState(startIndex);
-  // Furthest slide the student has reached. Going backwards never lowers this,
-  // so revisiting earlier slides won't rewind their saved progress.
-  const [maxReached, setMaxReached] = useState(startIndex);
+  // Furthest slide the student has *genuinely* reached (via Continue). Going
+  // backwards — or being sent to a slide by the tutor — never raises this, so
+  // peeking/reviewing can't rewind or inflate saved progress.
+  const [maxReached, setMaxReached] = useState(
+    Math.min(Math.max(0, initialMaxReached ?? startIndex), total - 1),
+  );
+  // Slide the learner was on before a *same-lesson* tutor jump, so they can
+  // return. Cross-lesson jumps use the shared `returnPoint` instead.
+  const [localReturn, setLocalReturn] = useState<number | null>(null);
+  // A phrase the tutor asked to spotlight, pinned to the slide it belongs to so
+  // it only shows on that slide and never leaks onto others.
+  const [highlight, setHighlight] = useState<{ slideIndex: number; text: string } | null>(
+    initialHighlight ? { slideIndex: startIndex, text: initialHighlight } : null,
+  );
   const [answers, setAnswers] = useState<Record<string, SlideAnswer>>({});
   const [completed, setCompleted] = useState<Set<string>>(
     () => new Set(initialCompletedSlideIds),
@@ -78,7 +107,6 @@ export function LessonPlayer({
     setChecked(already);
     setIsCorrect(already);
     setHintOpen(false);
-    setMaxReached((m) => Math.max(m, slideIndex));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [slideIndex]);
 
@@ -91,7 +119,7 @@ export function LessonPlayer({
   // slide reached (not the current view), so going back to recap a lesson never
   // rewinds where the student resumes from.
   useEffect(() => {
-    if (!user || finished) return;
+    if (!user || finished || reviewMode) return;
     const t = setTimeout(() => {
       void saveSlideProgress(
         user.uid,
@@ -102,7 +130,7 @@ export function LessonPlayer({
       );
     }, 500);
     return () => clearTimeout(t);
-  }, [user, course, lesson, maxReached, completed, finished]);
+  }, [user, course, lesson, maxReached, completed, finished, reviewMode]);
 
   // Flush the latest position when leaving the lesson. The debounce above is
   // cancelled on unmount, so without this, closing right after advancing would
@@ -110,7 +138,7 @@ export function LessonPlayer({
   // finished — completeLesson() already wrote the final, completed state and we
   // must not merge it back to "in_progress".
   useEffect(() => {
-    if (!user) return;
+    if (!user || reviewMode) return;
     return () => {
       if (latest.current.finished) return;
       void saveSlideProgress(
@@ -121,7 +149,7 @@ export function LessonPlayer({
         Array.from(latest.current.completed),
       );
     };
-  }, [user, course, lesson]);
+  }, [user, course, lesson, reviewMode]);
 
   const setAnswer = useCallback(
     (a: SlideAnswer) => {
@@ -152,14 +180,14 @@ export function LessonPlayer({
       if (!counted.current.has(slide.id)) {
         counted.current.add(slide.id);
         setProblemsSolved((n) => n + 1);
-        if (user) void recordProblemSolved(user.uid);
+        if (user && !reviewMode) void recordProblemSolved(user.uid);
       }
     }
   };
 
   const finishLesson = useCallback(async () => {
     markComplete(slide.id);
-    if (user) {
+    if (user && !reviewMode) {
       const res = await completeLesson(user.uid, course, lesson);
       setResult(res);
     } else {
@@ -171,13 +199,17 @@ export function LessonPlayer({
       });
     }
     setFinished(true);
-  }, [user, course, lesson, slide.id, markComplete]);
+  }, [user, course, lesson, slide.id, markComplete, reviewMode]);
 
   const handleAdvance = () => {
     markComplete(slide.id);
+    setHighlight(null);
     if (slideIndex < total - 1) {
       setDir(1);
-      setSlideIndex((i) => i + 1);
+      const next = slideIndex + 1;
+      setSlideIndex(next);
+      // Only genuine forward motion raises saved progress.
+      setMaxReached((m) => Math.max(m, next));
     } else {
       void finishLesson();
     }
@@ -185,8 +217,72 @@ export function LessonPlayer({
 
   const handleBack = () => {
     setDir(-1);
+    setHighlight(null);
     setSlideIndex((i) => Math.max(0, i - 1));
   };
+
+  // The tutor proposes a destination the learner confirms. Same-lesson jumps
+  // move in place (preserving in-progress answers) and remember where to return;
+  // cross-lesson jumps stash a shared return point and route to a review visit.
+  const handleTutorNavigate = useCallback(
+    (target: NavigationTarget) => {
+      if (target.lessonId === lesson.id) {
+        const dest = Math.min(Math.max(0, target.slideIndex), total - 1);
+        setLocalReturn((cur) => (cur === null ? slideIndex : cur));
+        setDir(target.slideIndex >= slideIndex ? 1 : -1);
+        setSlideIndex(dest);
+        setHighlight(target.highlight ? { slideIndex: dest, text: target.highlight } : null);
+      } else {
+        setReturnPoint({
+          courseId: course.id,
+          lessonId: lesson.id,
+          slideIndex,
+          lessonTitle: lesson.title,
+        });
+        navigate(`/courses/${course.id}/lessons/${target.lessonId}`, {
+          state: {
+            tutorInitialSlide: target.slideIndex,
+            review: true,
+            tutorHighlight: target.highlight,
+          },
+        });
+      }
+    },
+    [course, lesson, slideIndex, total, navigate, setReturnPoint],
+  );
+
+  const handleReturn = useCallback(() => {
+    if (localReturn !== null) {
+      setDir(-1);
+      setHighlight(null);
+      setSlideIndex(localReturn);
+      setLocalReturn(null);
+      return;
+    }
+    if (returnPoint) {
+      const point = returnPoint;
+      setReturnPoint(null);
+      navigate(`/courses/${point.courseId}/lessons/${point.lessonId}`, {
+        state: { tutorInitialSlide: point.slideIndex, review: false },
+      });
+    }
+  }, [localReturn, returnPoint, navigate, setReturnPoint]);
+
+  const dismissReturn = useCallback(() => {
+    setLocalReturn(null);
+    setReturnPoint(null);
+  }, [setReturnPoint]);
+
+  // Show the return pill for a same-lesson peek, or after arriving from a
+  // cross-lesson jump (the shared return point points back to another lesson).
+  const showReturnPill =
+    localReturn !== null || (!!returnPoint && returnPoint.lessonId !== lesson.id);
+  const returnLabel =
+    localReturn !== null
+      ? `Back to step ${localReturn + 1}`
+      : returnPoint
+        ? `Back to ${returnPoint.lessonTitle}`
+        : '';
 
   const goNextLesson = () => {
     const idx = course.lessons.findIndex((l) => l.id === lesson.id);
@@ -228,6 +324,16 @@ export function LessonPlayer({
 
   return (
     <div className="flex min-h-screen flex-col bg-surface">
+      <AnimatePresence>
+        {showReturnPill && (
+          <TutorReturnPill
+            label={returnLabel}
+            onReturn={handleReturn}
+            onDismiss={dismissReturn}
+          />
+        )}
+      </AnimatePresence>
+
       {/* Minimal chrome header */}
       <header className="sticky top-0 z-10 border-b border-line bg-surface">
         <div className="mx-auto flex h-14 max-w-2xl items-center gap-3 px-4">
@@ -264,6 +370,11 @@ export function LessonPlayer({
             answer={answer}
             onAnswer={setAnswer}
             showMistakes={checked && !isCorrect}
+            highlight={
+              highlight && highlight.slideIndex === slideIndex
+                ? highlight.text
+                : undefined
+            }
           />
         </motion.div>
       </main>
@@ -308,6 +419,15 @@ export function LessonPlayer({
           </div>
         </div>
       </footer>
+
+      <TutorWidget
+        course={course}
+        lesson={lesson}
+        slideIndex={slideIndex}
+        answer={answer}
+        solvedCorrectly={completed.has(slide.id)}
+        onNavigate={handleTutorNavigate}
+      />
     </div>
   );
 }

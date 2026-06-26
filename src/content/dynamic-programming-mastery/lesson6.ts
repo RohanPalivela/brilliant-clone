@@ -102,9 +102,9 @@ export const lesson6: Lesson = {
           'Each total = the coins already used for the smaller amount + 1 for the coin you add. Pick the smallest total.',
       },
       validation: { type: 'minCoinChoice', coins: [1, 3, 4], amount: 6 },
-      hint: 'Compare 1 + best[6 − c] for each coin c. Laying a 3 leaves make 3, which already costs only 1.',
+      hint: 'For each coin c, the cost is 1 (for that coin) plus best[6 − c]. Work out all three leftovers — 6 − 1, 6 − 3, 6 − 4 — and compare. The winner is not always the biggest coin.',
       explanationOnWrong:
-        'Lay down a 3: that leaves make 3 (best answer 1 coin), so the total is 1 + 1 = 2 — the cheapest. Laying a 4 leaves make 2 (2 coins) and a 1 leaves make 5 (2 coins), both totalling 3.',
+        'Each card’s total is 1 for the coin you add now plus the best coins for what is left (6 minus that coin). Resist grabbing the biggest coin — that is the greedy trap you just saw fail. Compute all three totals and keep the smallest. Which leftover is cheapest to make: 6 − 1, 6 − 3, or 6 − 4?',
     },
     {
       id: 'm6-s7',
@@ -157,9 +157,9 @@ export const lesson6: Lesson = {
         type: 'codeBlanks',
         correct: { ground: 'zero', addend: 'one', coin: 'c' },
       },
-      hint: 'best[0] = 0. Taking coin c costs 1 coin plus the best way to make the leftover a − c.',
+      hint: 'Three blanks: the cost of making 0, the number of coins a single c adds, and the leftover amount you look up. The only change from reachability is OR becoming min.',
       explanationOnWrong:
-        'best[0] = 0 (no coins make 0). Each coin c adds 1 coin to the best answer for a − c, and you keep the minimum.',
+        'Reason through each blank. What does it cost to make 0 — your base case? When you lay one coin c, how many coins does that single coin add (the addend)? And the leftover you then solve is a minus which value? Keep the minimum across every coin.',
     },
     {
       id: 'm6-s9',

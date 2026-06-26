@@ -19,36 +19,44 @@ import { CoinRecurrence } from '../interactive/CoinRecurrence';
 import { ForwardExplosion } from '../interactive/ForwardExplosion';
 import { FibonacciSequence } from '../interactive/FibonacciSequence';
 import { CodeViewer } from '../interactive/CodeViewer';
-import { renderInline } from '../../lib/renderInline';
+import { renderInline, highlightPlain } from '../../lib/renderInline';
 
 interface SlideViewProps {
   slide: Slide;
   answer: SlideAnswer;
   onAnswer: (answer: SlideAnswer) => void;
   showMistakes: boolean;
+  /** A phrase the tutor asked to spotlight on this slide, if any. */
+  highlight?: string;
 }
 
 // Each newline in the prompt becomes its own spaced line.
-function Prompt({ text }: { text?: string }) {
+function Prompt({ text, highlight }: { text?: string; highlight?: string }) {
   if (!text) return null;
   const lines = text.split('\n');
   return (
     <div className="mx-auto mb-8 flex max-w-lg flex-col gap-3 text-center">
       {lines.map((line, i) => (
         <p key={i} className="text-base leading-relaxed text-ink-soft">
-          {renderInline(line, `l${i}`)}
+          {renderInline(line, `l${i}`, highlight)}
         </p>
       ))}
     </div>
   );
 }
 
-export function SlideView({ slide, answer, onAnswer, showMistakes }: SlideViewProps) {
+export function SlideView({
+  slide,
+  answer,
+  onAnswer,
+  showMistakes,
+  highlight,
+}: SlideViewProps) {
   switch (slide.component) {
     case 'StairGrid':
       return (
         <div>
-          <Prompt text={slide.props.prompt} />
+          <Prompt text={slide.props.prompt} highlight={highlight} />
           <StairGrid
             config={slide.props}
             answer={answer}
@@ -61,7 +69,7 @@ export function SlideView({ slide, answer, onAnswer, showMistakes }: SlideViewPr
     case 'ArrayRow':
       return (
         <div>
-          <Prompt text={slide.props.prompt} />
+          <Prompt text={slide.props.prompt} highlight={highlight} />
           <ArrayRow
             config={slide.props}
             answer={answer}
@@ -74,7 +82,7 @@ export function SlideView({ slide, answer, onAnswer, showMistakes }: SlideViewPr
     case 'StairsToArray':
       return (
         <div>
-          <Prompt text={slide.props.prompt} />
+          <Prompt text={slide.props.prompt} highlight={highlight} />
           <StairsToArray config={slide.props} />
         </div>
       );
@@ -82,7 +90,7 @@ export function SlideView({ slide, answer, onAnswer, showMistakes }: SlideViewPr
     case 'StaircaseWalkthrough':
       return (
         <div>
-          <Prompt text={slide.props.prompt} />
+          <Prompt text={slide.props.prompt} highlight={highlight} />
           <StaircaseWalkthrough config={slide.props} />
         </div>
       );
@@ -90,7 +98,7 @@ export function SlideView({ slide, answer, onAnswer, showMistakes }: SlideViewPr
     case 'RangeSelector':
       return (
         <div>
-          <Prompt text={slide.props.prompt} />
+          <Prompt text={slide.props.prompt} highlight={highlight} />
           <RangeSelector config={slide.props} answer={answer} onAnswer={onAnswer} />
         </div>
       );
@@ -98,7 +106,7 @@ export function SlideView({ slide, answer, onAnswer, showMistakes }: SlideViewPr
     case 'PredecessorPicker':
       return (
         <div>
-          <Prompt text={slide.props.prompt} />
+          <Prompt text={slide.props.prompt} highlight={highlight} />
           <PredecessorPicker
             config={slide.props}
             answer={answer}
@@ -111,7 +119,7 @@ export function SlideView({ slide, answer, onAnswer, showMistakes }: SlideViewPr
     case 'CodeBlanks':
       return (
         <div>
-          <Prompt text={slide.props.prompt} />
+          <Prompt text={slide.props.prompt} highlight={highlight} />
           <CodeBlanks
             config={slide.props}
             answer={answer}
@@ -144,7 +152,7 @@ export function SlideView({ slide, answer, onAnswer, showMistakes }: SlideViewPr
     case 'KnapsackPicker':
       return (
         <div>
-          <Prompt text={slide.props.prompt} />
+          <Prompt text={slide.props.prompt} highlight={highlight} />
           <KnapsackPicker
             config={slide.props}
             answer={answer}
@@ -157,7 +165,7 @@ export function SlideView({ slide, answer, onAnswer, showMistakes }: SlideViewPr
     case 'CoinBuilder':
       return (
         <div>
-          <Prompt text={slide.props.prompt} />
+          <Prompt text={slide.props.prompt} highlight={highlight} />
           <CoinBuilder
             config={slide.props}
             answer={answer}
@@ -170,7 +178,7 @@ export function SlideView({ slide, answer, onAnswer, showMistakes }: SlideViewPr
     case 'PathBuilder':
       return (
         <div>
-          <Prompt text={slide.props.prompt} />
+          <Prompt text={slide.props.prompt} highlight={highlight} />
           <PathBuilder
             config={slide.props}
             answer={answer}
@@ -183,7 +191,7 @@ export function SlideView({ slide, answer, onAnswer, showMistakes }: SlideViewPr
     case 'MinChoicePicker':
       return (
         <div>
-          <Prompt text={slide.props.prompt} />
+          <Prompt text={slide.props.prompt} highlight={highlight} />
           <MinChoicePicker
             config={slide.props}
             answer={answer}
@@ -196,7 +204,7 @@ export function SlideView({ slide, answer, onAnswer, showMistakes }: SlideViewPr
     case 'DPTable':
       return (
         <div>
-          <Prompt text={slide.props.prompt} />
+          <Prompt text={slide.props.prompt} highlight={highlight} />
           <DPTable config={slide.props} />
         </div>
       );
@@ -204,7 +212,7 @@ export function SlideView({ slide, answer, onAnswer, showMistakes }: SlideViewPr
     case 'CoinSweep':
       return (
         <div>
-          <Prompt text={slide.props.prompt} />
+          <Prompt text={slide.props.prompt} highlight={highlight} />
           <CoinSweep config={slide.props} />
         </div>
       );
@@ -212,7 +220,7 @@ export function SlideView({ slide, answer, onAnswer, showMistakes }: SlideViewPr
     case 'SubproblemIsolation':
       return (
         <div>
-          <Prompt text={slide.props.prompt} />
+          <Prompt text={slide.props.prompt} highlight={highlight} />
           <SubproblemIsolation config={slide.props} />
         </div>
       );
@@ -220,7 +228,7 @@ export function SlideView({ slide, answer, onAnswer, showMistakes }: SlideViewPr
     case 'GreedyFailure':
       return (
         <div>
-          <Prompt text={slide.props.prompt} />
+          <Prompt text={slide.props.prompt} highlight={highlight} />
           <GreedyFailure config={slide.props} />
         </div>
       );
@@ -228,7 +236,7 @@ export function SlideView({ slide, answer, onAnswer, showMistakes }: SlideViewPr
     case 'CoinRecurrence':
       return (
         <div>
-          <Prompt text={slide.props.prompt} />
+          <Prompt text={slide.props.prompt} highlight={highlight} />
           <CoinRecurrence config={slide.props} />
         </div>
       );
@@ -236,7 +244,7 @@ export function SlideView({ slide, answer, onAnswer, showMistakes }: SlideViewPr
     case 'CodeViewer':
       return (
         <div>
-          <Prompt text={slide.props.prompt} />
+          <Prompt text={slide.props.prompt} highlight={highlight} />
           <CodeViewer config={slide.props} />
         </div>
       );
@@ -262,17 +270,21 @@ export function SlideView({ slide, answer, onAnswer, showMistakes }: SlideViewPr
           : null;
       const noop = () => {};
       const bodyEl = body && (
-        <p className="text-base leading-relaxed text-ink-soft">{body}</p>
+        <p className="text-base leading-relaxed text-ink-soft">
+          {highlightPlain(body, 'rt-body', highlight)}
+        </p>
       );
       const emphasisEl = emphasis && (
         <p className="mx-auto mb-4 max-w-md rounded-xl bg-brand-soft px-5 py-4 text-base font-semibold text-brand">
-          {emphasis}
+          {highlightPlain(emphasis, 'rt-emph', highlight)}
         </p>
       );
       return (
         <div className="mx-auto max-w-lg text-center">
           {heading && (
-            <h2 className="mb-4 text-2xl font-bold text-ink">{heading}</h2>
+            <h2 className="mb-4 text-2xl font-bold text-ink">
+              {highlightPlain(heading, 'rt-head', highlight)}
+            </h2>
           )}
           {bodyFirst ? (
             <>
@@ -290,7 +302,7 @@ export function SlideView({ slide, answer, onAnswer, showMistakes }: SlideViewPr
               {bullets.map((b, i) => (
                 <li key={i} className="flex gap-2">
                   <span className="text-brand">•</span>
-                  {b}
+                  {highlightPlain(b, `rt-b${i}`, highlight)}
                 </li>
               ))}
             </ul>

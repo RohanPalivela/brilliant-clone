@@ -68,8 +68,10 @@ export function MultipleChoice({
         {config.options.map((opt) => {
           const isSelected = selected.includes(opt.id);
           const isCorrect = correctIds.includes(opt.id);
+          // Flag the learner's own incorrect picks, but never reveal the
+          // correct option they missed — getting it wrong shouldn't give away
+          // the answer.
           const wrongPick = showMistakes && isSelected && !isCorrect;
-          const missedPick = showMistakes && !isSelected && isCorrect;
 
           return (
             <button
@@ -85,7 +87,6 @@ export function MultipleChoice({
                   ? 'border-brand bg-brand-soft text-ink'
                   : 'border-line bg-surface text-ink-soft hover:border-brand/40',
                 wrongPick && 'border-wrong bg-wrong-soft text-wrong',
-                missedPick && 'border-correct bg-correct-soft text-correct',
               )}
             >
               <span
@@ -94,7 +95,6 @@ export function MultipleChoice({
                   multiSelect ? 'rounded-md' : 'rounded-full',
                   isSelected ? 'border-brand bg-brand text-white' : 'border-line',
                   wrongPick && 'border-wrong bg-wrong',
-                  missedPick && 'border-correct bg-correct',
                 )}
               >
                 {isSelected && <Check className="h-3.5 w-3.5" aria-hidden="true" />}

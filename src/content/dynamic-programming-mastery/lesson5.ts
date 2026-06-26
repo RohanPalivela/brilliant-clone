@@ -39,9 +39,9 @@ export const lesson5: Lesson = {
           'Feasibility by hand: combine the coins to hit the target exactly. In a moment we’ll let an array answer this for every amount at once.',
       },
       validation: { type: 'coinSum', coins: [4, 5], target: 13 },
-      hint: 'You have 4s and 5s. Three coins do it — mix the two sizes so they sum to 13.',
+      hint: 'You only have 4s and 5s, and it takes three coins. Try mixing the two sizes: if you drop one 5, how much is left to cover with 4s?',
       explanationOnWrong:
-        'Make 13 exactly from {4, 5}: 4 + 4 + 5 = 13. Drop coins until the total reads 13, with no overshoot.',
+        'Aim for exactly 13 — overshooting means rethinking the mix. With three coins, figure out how many of each fit: if you use one 5, what amount is left, and does it split evenly into 4s? Adjust the count of each size until the tray reads 13 exactly.',
     },
     {
       id: 'm5-s2',
@@ -72,9 +72,9 @@ export const lesson5: Lesson = {
         ],
       },
       validation: { type: 'multipleChoice', correctIds: ['eightnine'] },
-      hint: 'Subtract each coin from 13, just like subtracting a jump from a step.',
+      hint: 'It works just like the staircase: subtract each coin from 13 to find the smaller amounts you would add that coin to.',
       explanationOnWrong:
-        'Identical to the stairs: 13 − 4 = 9 and 13 − 5 = 8. If either of those amounts is makeable, so is 13.',
+        '13 becomes makeable only if you can add one coin to a smaller amount that is already makeable — so subtract each coin from 13 to find those amounts. Do not pick the coin values 4 and 5 themselves; those are how far you look back, not the amounts you check.',
     },
     {
       id: 'm5-s5',
@@ -116,9 +116,9 @@ export const lesson5: Lesson = {
         type: 'codeBlanks',
         correct: { ground: 'zero', lookback: 'vminusc', current: 'value' },
       },
-      hint: 'Compare to the reachability loop: coin plays the role of jump, value plays the role of i.',
+      hint: 'It is the reachability loop with coins as jumps: coin plays the role of jump, value plays the role of i. Map each blank onto the version you already wrote.',
       explanationOnWrong:
-        'can_make[0] is True. You read the smaller amount can_make[value − coin], and when it’s makeable you set can_make[value] = True.',
+        'Reason through each blank using the coins-as-jumps mapping. Which amount is always makeable with no coins at all — your base case? Which smaller amount do you read, the one a single coin below value? And which cell do you set True — the amount you just reached?',
     },
     {
       id: 'm5-s6',

@@ -217,9 +217,9 @@ export const lesson4: Lesson = {
         type: 'codeBlanks',
         correct: { ground: 'zero', lookback: 'iminusj', current: 'i' },
       },
-      hint: 'The ground (index 0) starts reachable. You arrive at i from i − j, and the cell you set is i itself.',
+      hint: 'Each blank plays one of three roles you already used by hand: the base case you seed before the loop, the earlier cell you read to inherit reachability, and the cell you are currently deciding. Which expression fits each?',
       explanationOnWrong:
-        'reachable[0] is the ground (True). You check the step you’d come from, reachable[i − j], and when it’s reachable you set reachable[i] = True.',
+        'Walk the logic blank by blank. Which index do you seed as reachable before any jumps — the ground you start on? Inside the loop, which earlier cell tells you a step is reachable — the one you would have jumped from? And which cell are you setting True — the step you just arrived on? Match each to the i and j you used on the staircase.',
     },
     {
       id: 'm4-s6',
