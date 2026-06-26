@@ -212,13 +212,10 @@ describe('TutorWidget', () => {
     expect(onNavigate).not.toHaveBeenCalled();
   });
 
-  it('shows a friendly disabled state and blocks sending when unconfigured', async () => {
+  it('renders nothing when the tutor is disabled (no dev hints ever reach a learner)', () => {
     isTutorConfigured.mockReturnValue(false);
-    const user = userEvent.setup();
     renderWidget();
-    await user.click(screen.getByRole('button', { name: /open ai tutor/i }));
-    expect(screen.getByText(/tutor is asleep/i)).toBeInTheDocument();
-    expect(screen.getByRole('textbox', { name: /message the tutor/i })).toBeDisabled();
+    expect(screen.queryByRole('button', { name: /open ai tutor/i })).not.toBeInTheDocument();
     expect(streamTutorReply).not.toHaveBeenCalled();
   });
 });

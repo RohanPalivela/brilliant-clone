@@ -51,10 +51,14 @@ export function TutorWidget({
   }, [turns, isOpen]);
 
   const submit = () => {
-    if (!draft.trim() || isStreaming || !configured) return;
+    if (!draft.trim() || isStreaming) return;
     void send(draft);
     setDraft('');
   };
+
+  // When the tutor is turned off for this site, render nothing at all — a learner
+  // should never see a broken/disabled tutor or any developer configuration hint.
+  if (!configured) return null;
 
   return (
     <>
@@ -120,9 +124,7 @@ export function TutorWidget({
               ref={scrollRef}
               className="flex-1 space-y-3 overflow-y-auto px-4 py-4"
             >
-              {turns.length === 0 && (
-                <EmptyState configured={configured} onActivity={onActivity} />
-              )}
+              {turns.length === 0 && <EmptyState onActivity={onActivity} />}
               {turns.map((turn) => (
                 <div
                   key={turn.id}
@@ -168,17 +170,15 @@ export function TutorWidget({
                       submit();
                     }
                   }}
-                  disabled={!configured || isStreaming}
+                  disabled={isStreaming}
                   rows={1}
-                  placeholder={
-                    configured ? 'Ask for a hint…' : 'Tutor not configured'
-                  }
+                  placeholder="Ask for a hint…"
                   aria-label="Message the tutor"
                   className="max-h-28 min-h-[2.5rem] flex-1 resize-none rounded-xl border border-line bg-canvas px-3 py-2 text-sm text-ink placeholder:text-muted focus-visible:outline-2 focus-visible:outline-offset-0 focus-visible:outline-brand disabled:opacity-60"
                 />
                 <button
                   type="submit"
-                  disabled={!configured || isStreaming || !draft.trim()}
+                  disabled={isStreaming || !draft.trim()}
                   aria-label="Send message"
                   className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-cta text-white transition-colors hover:bg-cta-hover disabled:bg-line disabled:text-muted"
                 >
@@ -193,24 +193,7 @@ export function TutorWidget({
   );
 }
 
-function EmptyState({
-  configured,
-  onActivity,
-}: {
-  configured: boolean;
-  onActivity: boolean;
-}) {
-  if (!configured) {
-    return (
-      <div className="mt-6 text-center text-sm text-muted">
-        <p className="font-semibold text-ink">Tutor is asleep 😴</p>
-        <p className="mt-1">
-          Set <code className="font-mono">VITE_AI_TUTOR_ENABLED=true</code> (and configure the
-          server proxy) to wake Sage up. Everything else in the lesson works without it.
-        </p>
-      </div>
-    );
-  }
+function EmptyState({ onActivity }: { onActivity: boolean }) {
   return (
     <div className="mt-6 text-center text-sm text-muted">
       <p className="font-semibold text-ink">Hi, I’m Sage 👋</p>
