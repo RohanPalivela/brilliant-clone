@@ -126,14 +126,6 @@ export function TutorWidget({
               </button>
             </header>
 
-            {/* Activity safeguard badge */}
-            {onActivity && (
-              <div className="flex items-center gap-1.5 border-b border-brand/10 bg-brand-soft/60 px-4 py-2 text-xs font-medium text-brand">
-                <ShieldCheck className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
-                Guided help only — I won’t give away the answer here.
-              </div>
-            )}
-
             {/* Messages */}
             <div
               ref={scrollRef}
@@ -268,7 +260,7 @@ function SageMark({
 }
 
 const ACTIVITY_PROMPTS = [
-  'I’m stuck — give me a nudge',
+  'I’m stuck, give me a nudge',
   'Explain this idea again',
   'What should I focus on?',
 ];
@@ -295,7 +287,7 @@ function EmptyState({
       <p className="mt-3 font-display text-base font-semibold text-ink">Hi, I’m Sage</p>
       <p className="mx-auto mt-1 max-w-[18rem] text-sm leading-relaxed text-muted">
         {onActivity
-          ? 'Stuck on this step? Ask me for a nudge and I’ll help you reason it out — without spoiling the answer.'
+          ? 'Stuck on this step? Ask me for a nudge and I’ll help you reason it out.'
           : 'Ask me anything about this lesson. I can also walk you back to an earlier part if it helps.'}
       </p>
       <div className="mt-4 flex w-full flex-col items-stretch gap-2">
