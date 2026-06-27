@@ -3,6 +3,8 @@ import { Flame, ArrowRight, PlayCircle } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 import { useStreak } from '../hooks/useStreak';
 import { useAllCourseProgress } from '../hooks/useProgress';
+import { useReviewItems } from '../hooks/useReviewItems';
+import { DailyReviewGoal } from '../components/review/DailyReviewGoal';
 import { courses, getCourse, firstIncompleteLesson } from '../content';
 import { resolveDisplayName } from '../lib/name';
 import { Card } from '../components/ui/Card';
@@ -23,6 +25,7 @@ export function HomePage() {
   const { profile } = useAuth();
   const streak = useStreak();
   const { byCourse } = useAllCourseProgress();
+  const { items: reviewItems, dueCount, nextDueAt } = useReviewItems();
 
   // "Your courses" = only courses the learner has actually started, ordered by
   // most recently touched so the active one floats to the top.
@@ -127,6 +130,22 @@ export function HomePage() {
             </Button>
           </Link>
         </Card>
+      )}
+
+      {/* Spaced repetition: surface today's review goal so memory stays fresh */}
+      {(dueCount > 0 || (profile?.reviewsCompletedToday ?? 0) > 0) && (
+        <section>
+          <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-muted">
+            Keep it sharp
+          </h2>
+          <DailyReviewGoal
+            dueCount={dueCount}
+            reviewsToday={profile?.reviewsCompletedToday ?? 0}
+            hasItems={reviewItems.length > 0}
+            nextDueAt={nextDueAt}
+            compact
+          />
+        </section>
       )}
 
       {/* Your courses — only what the learner has actually started */}

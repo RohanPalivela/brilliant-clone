@@ -19,6 +19,11 @@ vi.mock('../../data/progressService', () => ({
   }),
 }));
 
+vi.mock('../../data/reviewService', () => ({
+  enrollReviewItem: vi.fn().mockResolvedValue(undefined),
+  enrollSkillBank: vi.fn().mockResolvedValue(undefined),
+}));
+
 vi.mock('../../lib/aiTutor/config', () => ({
   isTutorConfigured: () => true,
   getTutorConfig: () => ({ enabled: true, endpoint: '/api/tutor', model: 'm' }),
@@ -126,35 +131,36 @@ describe('LessonPlayer + tutor navigation', () => {
     expect(mark?.textContent).toBe('Intro');
   });
 
-  it('clears the spotlight once the learner moves on', async () => {
-    renderPlayer(0);
-    await jumpViaTutor('s3', 'Done'); // forward jump, spotlight "Done"
-    const done = await screen.findByRole('heading', { name: /done slide/i });
-    expect(done.querySelector('mark.tutor-highlight')).not.toBeNull();
-
-    // The return pill takes them back; the spotlight should not persist.
-    const user = userEvent.setup();
-    await user.click(await screen.findByRole('button', { name: /back to step 1/i }));
+  it('clears the spotlight once the learner returns from a review jump', async () => {
+    renderPlayer(2); // start on the last slide, the furthest genuinely reached
+    await jumpViaTutor('s1', 'Intro'); // tutor sends them back, spotlight "Intro"
     const intro = await screen.findByRole('heading', { name: /intro slide/i });
-    expect(intro.querySelector('mark.tutor-highlight')).toBeNull();
+    expect(intro.querySelector('mark.tutor-highlight')).not.toBeNull();
+
+    // The return pill takes them forward to where they were; the spotlight,
+    // pinned to the intro slide, should not persist.
+    const user = userEvent.setup();
+    await user.click(await screen.findByRole('button', { name: /back to step 3/i }));
+    const done = await screen.findByRole('heading', { name: /done slide/i });
+    expect(done.querySelector('mark.tutor-highlight')).toBeNull();
   });
 
-  it('never inflates saved progress when the tutor jumps the learner forward (#6)', async () => {
-    const { unmount } = renderPlayer(0); // genuine progress: slide 0
-    expect(screen.getByText('Intro slide')).toBeInTheDocument();
+  it('never rewinds saved progress when the tutor sends the learner back to review (#6)', async () => {
+    const { unmount } = renderPlayer(2); // genuine progress: slide 2
+    expect(screen.getByText('Done slide')).toBeInTheDocument();
 
-    await jumpViaTutor('s3'); // peek forward to the last slide
-    expect(await screen.findByText('Done slide')).toBeInTheDocument();
+    await jumpViaTutor('s1'); // tutor walks them back to the intro to review
+    expect(await screen.findByText('Intro slide')).toBeInTheDocument();
 
     // Leaving flushes progress. It must record the furthest *genuinely* reached
-    // slide (0), not the slide the tutor peeked to (2).
+    // slide (2), not the earlier slide the tutor sent them back to (0).
     unmount();
 
     const calls = (progress.saveSlideProgress as unknown as { mock: { calls: unknown[][] } })
       .mock.calls;
     expect(calls.length).toBeGreaterThan(0);
     for (const call of calls) {
-      expect(call[3]).toBe(0);
+      expect(call[3]).toBe(2);
     }
   });
 });

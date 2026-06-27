@@ -12,6 +12,8 @@ import {
   recordProblemSolved,
   type LessonCompletionResult,
 } from '../../data/progressService';
+import { enrollReviewItem, enrollSkillBank } from '../../data/reviewService';
+import { deriveSkillId } from '../../content/skills';
 import { useAuth } from '../../hooks/useAuth';
 import { useTutor } from '../../hooks/useTutor';
 import { Button } from '../ui/Button';
@@ -180,7 +182,23 @@ export function LessonPlayer({
       if (!counted.current.has(slide.id)) {
         counted.current.add(slide.id);
         setProblemsSolved((n) => n + 1);
-        if (user && !reviewMode) void recordProblemSolved(user.uid);
+        if (user && !reviewMode) {
+          void recordProblemSolved(user.uid);
+          // The learner just demonstrated this pattern — schedule it to come
+          // back at growing intervals (spacing effect).
+          const skillId = deriveSkillId(slide);
+          if (skillId) {
+            void enrollReviewItem(user.uid, {
+              courseId: course.id,
+              lessonId: lesson.id,
+              slideId: slide.id,
+              skillId,
+            });
+            // First time the learner shows this pattern, unlock its practice
+            // bank so review has fresh variants to draw on over the coming days.
+            void enrollSkillBank(user.uid, skillId);
+          }
+        }
       }
     }
   };

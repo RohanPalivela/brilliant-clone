@@ -20,6 +20,11 @@ vi.mock('../../data/progressService', () => ({
   }),
 }));
 
+vi.mock('../../data/reviewService', () => ({
+  enrollReviewItem: vi.fn().mockResolvedValue(undefined),
+  enrollSkillBank: vi.fn().mockResolvedValue(undefined),
+}));
+
 import * as progress from '../../data/progressService';
 
 const lesson: Lesson = {

@@ -13,6 +13,8 @@ export interface UserProfile {
   todayKey: string;
   problemsSolvedToday: number;
   lessonsCompletedToday: number;
+  /** Spaced-repetition reviews completed today (drives the daily review goal). */
+  reviewsCompletedToday: number;
   totalLessonsCompleted: number;
 }
 

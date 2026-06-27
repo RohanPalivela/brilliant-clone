@@ -1,5 +1,8 @@
-// Streak rules (PRD Section 13.1): a day counts as qualifying when the learner
-// completes >= 1 lesson OR >= 3 checked interactive problems. Miss a day -> reset.
+// Streak rules: a day counts as qualifying when the learner completes >= 1
+// lesson, OR >= 3 checked interactive problems, OR does >= 1 spaced-repetition
+// review. Making review a first-class way to keep the streak is deliberate —
+// Phase 3 wants daily retrieval to be the explicit thing-to-do, not an
+// afterthought. Miss a day -> reset.
 
 export function dateKey(d: Date = new Date()): string {
   const y = d.getFullYear();
@@ -22,11 +25,13 @@ export interface StreakState {
   todayKey: string;
   problemsSolvedToday: number;
   lessonsCompletedToday: number;
+  reviewsCompletedToday: number;
 }
 
 export interface ActivityDelta {
   lessonsCompleted?: number;
   problemsSolved?: number;
+  reviewsCompleted?: number;
 }
 
 export interface StreakUpdate extends StreakState {
@@ -43,19 +48,29 @@ export function applyActivity(
   delta: ActivityDelta,
   today: string = dateKey(),
 ): StreakUpdate {
-  let { streak, lastActivityDate, problemsSolvedToday, lessonsCompletedToday } =
-    state;
+  let {
+    streak,
+    lastActivityDate,
+    problemsSolvedToday,
+    lessonsCompletedToday,
+    reviewsCompletedToday,
+  } = state;
 
   // Roll counters over to the new day.
   if (state.todayKey !== today) {
     problemsSolvedToday = 0;
     lessonsCompletedToday = 0;
+    reviewsCompletedToday = 0;
   }
 
   problemsSolvedToday += delta.problemsSolved ?? 0;
   lessonsCompletedToday += delta.lessonsCompleted ?? 0;
+  reviewsCompletedToday += delta.reviewsCompleted ?? 0;
 
-  const qualifies = lessonsCompletedToday >= 1 || problemsSolvedToday >= 3;
+  const qualifies =
+    lessonsCompletedToday >= 1 ||
+    problemsSolvedToday >= 3 ||
+    reviewsCompletedToday >= 1;
   let streakExtended = false;
 
   if (qualifies && lastActivityDate !== today) {
@@ -71,6 +86,7 @@ export function applyActivity(
     todayKey: today,
     problemsSolvedToday,
     lessonsCompletedToday,
+    reviewsCompletedToday,
     streakExtended,
   };
 }

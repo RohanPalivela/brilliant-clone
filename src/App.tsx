@@ -21,6 +21,14 @@ const ProfilePage = lazy(() =>
 const LessonPlayerPage = lazy(() =>
   import('./pages/LessonPlayerPage').then((m) => ({ default: m.LessonPlayerPage })),
 );
+const ReviewPage = lazy(() =>
+  import('./pages/ReviewPage').then((m) => ({ default: m.ReviewPage })),
+);
+const ReviewSessionPage = lazy(() =>
+  import('./pages/ReviewSessionPage').then((m) => ({
+    default: m.ReviewSessionPage,
+  })),
+);
 
 export default function App() {
   return (
@@ -40,14 +48,16 @@ export default function App() {
             <Route path="/" element={<HomePage />} />
             <Route path="/courses" element={<CoursesPage />} />
             <Route path="/courses/:courseId" element={<CourseDetailPage />} />
+            <Route path="/review" element={<ReviewPage />} />
             <Route path="/profile" element={<ProfilePage />} />
           </Route>
 
-          {/* Lesson player uses minimal chrome (no nav) */}
+          {/* Lesson + review players use minimal chrome (no nav) */}
           <Route
             path="/courses/:courseId/lessons/:lessonId"
             element={<LessonPlayerPage />}
           />
+          <Route path="/review/session" element={<ReviewSessionPage />} />
         </Route>
 
         <Route path="*" element={<Navigate to="/" replace />} />

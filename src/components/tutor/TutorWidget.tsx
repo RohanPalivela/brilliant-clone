@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
-import { Sparkles, X, Send, ArrowRight, BookOpen } from 'lucide-react';
+import { Sparkles, X, Send, ArrowRight, ShieldCheck, BookOpen } from 'lucide-react';
 import type { Course, Lesson, SlideAnswer } from '../../types/content';
 import type { ChatTurn, NavigationTarget } from '../../lib/aiTutor/types';
 import { buildTutorContext } from '../../lib/aiTutor/context';
@@ -125,6 +125,14 @@ export function TutorWidget({
                 <X className="h-4 w-4" aria-hidden="true" />
               </button>
             </header>
+
+            {/* Activity safeguard badge */}
+            {onActivity && (
+              <div className="flex items-center gap-1.5 border-b border-brand/10 bg-brand-soft/60 px-4 py-2 text-xs font-medium text-brand">
+                <ShieldCheck className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+                Guided help only — I won’t give away the answer here.
+              </div>
+            )}
 
             {/* Messages */}
             <div

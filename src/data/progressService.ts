@@ -49,6 +49,7 @@ export async function ensureUserProfile(user: User): Promise<UserProfile> {
     todayKey: dateKey(),
     problemsSolvedToday: 0,
     lessonsCompletedToday: 0,
+    reviewsCompletedToday: 0,
     totalLessonsCompleted: 0,
   };
   await setDoc(ref, { ...profile, createdAt: serverTimestamp() });
@@ -83,14 +84,16 @@ export async function updateDisplayName(
  * so we enumerate the subcollections and batch the deletes.
  */
 export async function deleteUserData(uid: string): Promise<void> {
-  const [courseSnaps, lessonSnaps] = await Promise.all([
+  const [courseSnaps, lessonSnaps, reviewSnaps] = await Promise.all([
     getDocs(collection(db, 'users', uid, 'courseProgress')),
     getDocs(collection(db, 'users', uid, 'lessonProgress')),
+    getDocs(collection(db, 'users', uid, 'reviewItems')),
   ]);
 
   const batch = writeBatch(db);
   courseSnaps.forEach((s) => batch.delete(s.ref));
   lessonSnaps.forEach((s) => batch.delete(s.ref));
+  reviewSnaps.forEach((s) => batch.delete(s.ref));
   batch.delete(userRef(uid));
   await batch.commit();
 }
@@ -105,15 +108,20 @@ export async function resetCourseProgress(
   uid: string,
   courseId: string,
 ): Promise<void> {
-  const [cp, lessonSnaps, profile] = await Promise.all([
+  const [cp, lessonSnaps, reviewSnaps, profile] = await Promise.all([
     getCourseProgress(uid, courseId),
     getDocs(collection(db, 'users', uid, 'lessonProgress')),
+    getDocs(collection(db, 'users', uid, 'reviewItems')),
     getUserProfile(uid),
   ]);
 
   const batch = writeBatch(db);
   lessonSnaps.forEach((s) => {
     if ((s.data() as LessonProgress).courseId === courseId) batch.delete(s.ref);
+  });
+  reviewSnaps.forEach((s) => {
+    if ((s.data() as { courseId?: string }).courseId === courseId)
+      batch.delete(s.ref);
   });
   batch.delete(courseProgressRef(uid, courseId));
 
@@ -275,6 +283,26 @@ export async function recordProblemSolved(uid: string): Promise<void> {
     todayKey: next.todayKey,
     problemsSolvedToday: next.problemsSolvedToday,
     lessonsCompletedToday: next.lessonsCompletedToday,
+    reviewsCompletedToday: next.reviewsCompletedToday,
+  });
+}
+
+/**
+ * Record a completed spaced-repetition review. Counts toward the daily review
+ * goal and, on its own, keeps the streak alive — doing your reviews is a full
+ * day's work.
+ */
+export async function recordReviewCompleted(uid: string): Promise<void> {
+  const profile = await getUserProfile(uid);
+  if (!profile) return;
+  const next = applyActivity(profile, { reviewsCompleted: 1 });
+  await updateDoc(userRef(uid), {
+    streak: next.streak,
+    lastActivityDate: next.lastActivityDate,
+    todayKey: next.todayKey,
+    problemsSolvedToday: next.problemsSolvedToday,
+    lessonsCompletedToday: next.lessonsCompletedToday,
+    reviewsCompletedToday: next.reviewsCompletedToday,
   });
 }
 
@@ -340,6 +368,7 @@ export async function completeLesson(
       todayKey: next.todayKey,
       problemsSolvedToday: next.problemsSolvedToday,
       lessonsCompletedToday: next.lessonsCompletedToday,
+      reviewsCompletedToday: next.reviewsCompletedToday,
       totalLessonsCompleted: profile.totalLessonsCompleted + 1,
     });
   }

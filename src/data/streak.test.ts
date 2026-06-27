@@ -37,6 +37,7 @@ function freshState(overrides: Partial<StreakState> = {}): StreakState {
     todayKey: '2026-01-01',
     problemsSolvedToday: 0,
     lessonsCompletedToday: 0,
+    reviewsCompletedToday: 0,
     ...overrides,
   };
 }
@@ -62,6 +63,13 @@ describe('applyActivity', () => {
     expect(after3.problemsSolvedToday).toBe(3);
     expect(after3.streak).toBe(1);
     expect(after3.streakExtended).toBe(true);
+  });
+
+  it('qualifies the day with a single completed review', () => {
+    const next = applyActivity(freshState(), { reviewsCompleted: 1 }, '2026-01-01');
+    expect(next.reviewsCompletedToday).toBe(1);
+    expect(next.streak).toBe(1);
+    expect(next.streakExtended).toBe(true);
   });
 
   it('does not double-count a second qualifying activity on the same day', () => {

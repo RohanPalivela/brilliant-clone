@@ -1,6 +1,7 @@
 import { NavLink } from 'react-router-dom';
-import { Home, BookOpen, User, Flame } from 'lucide-react';
+import { Home, BookOpen, User, Flame, RotateCcw } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
+import { useReviewItems } from '../../hooks/useReviewItems';
 import { effectiveStreak } from '../../data/streak';
 import { cn } from '../../lib/cn';
 import { Logo } from './Logo';
@@ -8,11 +9,22 @@ import { Logo } from './Logo';
 const links = [
   { to: '/', label: 'Home', icon: Home, end: true },
   { to: '/courses', label: 'Courses', icon: BookOpen, end: false },
+  { to: '/review', label: 'Review', icon: RotateCcw, end: false },
   { to: '/profile', label: 'Profile', icon: User, end: false },
 ];
 
+function Badge({ count }: { count: number }) {
+  if (count <= 0) return null;
+  return (
+    <span className="ml-0.5 inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-flame px-1.5 text-[11px] font-bold text-white">
+      {count > 99 ? '99+' : count}
+    </span>
+  );
+}
+
 export function TopNav() {
   const { profile } = useAuth();
+  const { dueCount } = useReviewItems();
   const streak = profile
     ? effectiveStreak(profile.streak, profile.lastActivityDate)
     : 0;
@@ -43,6 +55,7 @@ export function TopNav() {
               >
                 <Icon className="h-4 w-4" aria-hidden="true" />
                 {label}
+                {to === '/review' && <Badge count={dueCount} />}
               </NavLink>
             ))}
           </nav>
@@ -72,7 +85,14 @@ export function TopNav() {
                 )
               }
             >
-              <Icon className="h-5 w-5" aria-hidden="true" />
+              <span className="relative">
+                <Icon className="h-5 w-5" aria-hidden="true" />
+                {to === '/review' && dueCount > 0 && (
+                  <span className="absolute -right-2 -top-1.5 inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-flame px-1 text-[10px] font-bold text-white">
+                    {dueCount > 9 ? '9+' : dueCount}
+                  </span>
+                )}
+              </span>
               {label}
             </NavLink>
           ))}
