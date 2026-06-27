@@ -25,9 +25,22 @@ const FIRST_INTERVAL = 1;
 const SECOND_INTERVAL = 3;
 /** Where a forgotten item lands: resurface it tomorrow, not weeks later. */
 const LAPSE_INTERVAL = 1;
+/**
+ * Interval for the FIRST successful recall *after a lapse* (relearning). A
+ * lapsed card once held durable memory, so it recovers faster than a brand-new
+ * card (which restarts at FIRST_INTERVAL = 1 day). This is what stops a
+ * good/again/good/again learner from being pinned at a 1-day interval forever.
+ */
+const RELEARN_INTERVAL = 3;
+/**
+ * Below this answer time (ms) a clean first-try recall counts as `easy`.
+ * Exported so other layers can mirror the "fast" threshold if needed.
+ */
+export const FAST_RECALL_MS = 8000;
 
 const round = (n: number) => Math.round(n);
 const clampEase = (e: number) => Math.max(MIN_EASE, e);
+const clamp01 = (n: number) => Math.min(1, Math.max(0, n));
 
 /**
  * Scheduler state for a problem the learner just solved inside a lesson. It
@@ -71,6 +84,12 @@ export function newItemSchedule(
  * - `hard`   -> shorter-than-normal growth, ease down a touch.
  * - `good`   -> standard SM-2 growth (1d, 3d, then * ease).
  * - `easy`   -> faster growth, ease up.
+ *
+ * Relearning: a card is "post-lapse" when reps === 0 but lapses > 0 (a brand
+ * new card has reps === 0 AND lapses === 0). On the first success after a lapse
+ * we jump straight to RELEARN_INTERVAL instead of 1 day, and the second success
+ * resumes multiplicative growth — so a recovered card climbs again rather than
+ * being knocked back to a 1-day interval on every good/again cycle.
  */
 export function scheduleNext(
   prev: Pick<ReviewItem, 'ease' | 'intervalDays' | 'reps' | 'lapses'>,
@@ -79,6 +98,7 @@ export function scheduleNext(
 ): SrsState {
   let { ease, reps, lapses } = prev;
   let intervalDays = prev.intervalDays;
+  const relearning = lapses > 0;
 
   if (grade === 'again') {
     reps = 0;
@@ -86,9 +106,17 @@ export function scheduleNext(
     ease = clampEase(ease - 0.2);
     intervalDays = LAPSE_INTERVAL;
   } else {
-    if (reps <= 0) intervalDays = FIRST_INTERVAL;
-    else if (reps === 1) intervalDays = SECOND_INTERVAL;
-    else intervalDays = round(intervalDays * ease);
+    if (reps <= 0) {
+      // First success: brand-new card restarts at 1 day; a relearning card
+      // recovers faster to RELEARN_INTERVAL.
+      intervalDays = relearning ? RELEARN_INTERVAL : FIRST_INTERVAL;
+    } else if (reps === 1) {
+      // Second success: brand-new card steps to SECOND_INTERVAL; a relearning
+      // card (already at RELEARN_INTERVAL) resumes interval * ease growth.
+      intervalDays = relearning ? round(intervalDays * ease) : SECOND_INTERVAL;
+    } else {
+      intervalDays = round(intervalDays * ease);
+    }
 
     if (grade === 'hard') {
       ease = clampEase(ease - 0.15);
@@ -115,10 +143,15 @@ export function scheduleNext(
  * the grade from how the recall actually went, which keeps the loop honest:
  * a clean first-try recall grows the interval fastest; needing a hint or a retry
  * counts as "hard"; failing to recall is "again".
+ *
+ * A *clean* recall (correct, no hint, no wrong attempts) grades `easy` only when
+ * it was also FAST (elapsedMs <= FAST_RECALL_MS); a clean-but-slow recall — or
+ * one with no timing signal at all — stays `good` (back-compat).
  */
 export function gradeOutcome(outcome: ReviewOutcome): Grade {
   if (!outcome.correct) return 'again';
   if (outcome.usedHint || outcome.wrongAttempts > 0) return 'hard';
+  if (outcome.elapsedMs != null && outcome.elapsedMs <= FAST_RECALL_MS) return 'easy';
   return 'good';
 }
 
@@ -129,10 +162,30 @@ export function gradeOutcome(outcome: ReviewOutcome): Grade {
 /** Interval (days) at which an item counts as fully mastered. */
 const MASTERED_INTERVAL = 21;
 
-/** Memory strength for one item, 0..1, based on how far its interval has grown. */
-export function itemStrength(item: Pick<ReviewItem, 'intervalDays' | 'reps'>): number {
-  if (item.reps <= 0) return 0;
-  return Math.min(1, item.intervalDays / MASTERED_INTERVAL);
+/**
+ * Memory strength for one item, 0..1, combining how far its interval has grown
+ * with how *retrievable* it still is right now.
+ *
+ *   stability      = min(1, intervalDays / MASTERED_INTERVAL)
+ *   elapsedDays    = (now - lastReviewedAt) / day
+ *   retrievability = clamp01(intervalDays / max(intervalDays, elapsedDays))
+ *   strength       = stability * retrievability
+ *
+ * An item reviewed recently (elapsed << interval) keeps retrievability ≈ 1, so
+ * strength reflects its interval. An item left well past its interval decays:
+ * being 100 days overdue on a 21-day interval no longer reports "mastered".
+ * Unpracticed items (reps <= 0) have zero strength.
+ */
+export function itemStrength(
+  item: Pick<ReviewItem, 'intervalDays' | 'reps' | 'lastReviewedAt'>,
+  now: number = Date.now(),
+): number {
+  if (item.reps <= 0 || item.intervalDays <= 0) return 0;
+  const stability = Math.min(1, item.intervalDays / MASTERED_INTERVAL);
+  const elapsedDays = Math.max(0, (now - item.lastReviewedAt) / DAY_MS);
+  const denom = Math.max(item.intervalDays, elapsedDays);
+  const retrievability = denom <= 0 ? 1 : clamp01(item.intervalDays / denom);
+  return stability * retrievability;
 }
 
 export function levelFromStrength(strength: number): MasteryLevel {
@@ -162,12 +215,19 @@ export function summarizeMastery(
     .filter((s) => bySkill.has(s.id))
     .map((skill) => {
       const group = bySkill.get(skill.id)!;
-      const strength =
-        group.reduce((sum, it) => sum + itemStrength(it), 0) / group.length;
+      // Average strength over PRACTICED items only. Freshly-seeded bank
+      // variants (reps === 0, strength 0) would otherwise dilute mastery —
+      // demonstrating a skill once shouldn't drop it from 100% to ~11%.
+      const practicedItems = group.filter((it) => it.reps > 0);
+      const strength = practicedItems.length
+        ? practicedItems.reduce((sum, it) => sum + itemStrength(it, now), 0) /
+          practicedItems.length
+        : 0;
       const due = group.filter((it) => it.dueAt <= now).length;
       return {
         skill,
         total: group.length,
+        practiced: practicedItems.length,
         due,
         strength,
         level: levelFromStrength(strength),

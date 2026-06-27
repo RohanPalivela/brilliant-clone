@@ -58,12 +58,6 @@ export const REVIEW_SKILLS: ReviewSkill[] = [
     blurb: 'Compare 1 + best[amount − coin] across coins.',
     order: 7,
   },
-  {
-    id: 'take-or-skip',
-    name: 'Take or skip',
-    blurb: 'Weigh taking vs skipping under a capacity.',
-    order: 8,
-  },
 ];
 
 const SKILL_BY_ID = new Map(REVIEW_SKILLS.map((s) => [s.id, s]));
@@ -78,7 +72,9 @@ const VALIDATION_SKILL: Record<Validation['type'], string | null> = {
   codeBlanks: 'recurrence-code',
   coinSum: 'coin-change',
   minCoinChoice: 'optimal-choice',
-  knapsack: 'take-or-skip',
+  // Knapsack / take-or-skip is intentionally NOT part of the review curriculum:
+  // it (and 2D DP) is never taught in the lessons, so it produces no review items.
+  knapsack: null,
 };
 
 /** The skill a slide trains, or null if it isn't a gradable activity. */
@@ -104,10 +100,16 @@ export interface ReviewableRef {
   slideId: string;
   skillId: string;
   lessonTitle: string;
+  /** Authored difficulty (1–5) read off the slide; defaults to 3 when absent.
+   *  Lets a seeder introduce a skill's items in ascending easy→hard order. */
+  difficulty: number;
 }
 
 /** Bank items attach to the (single) DP course so course resets clear them too. */
 const BANK_COURSE_ID = courses[0]?.id ?? 'dynamic-programming-mastery';
+
+/** Fallback difficulty for slides (e.g. lesson checkpoints) that omit one. */
+const DEFAULT_DIFFICULTY = 3;
 
 function buildReviewableIndex(): ReviewableRef[] {
   const out: ReviewableRef[] = [];
@@ -123,6 +125,7 @@ function buildReviewableIndex(): ReviewableRef[] {
           slideId: slide.id,
           skillId,
           lessonTitle: lesson.title,
+          difficulty: slide.difficulty ?? DEFAULT_DIFFICULTY,
         });
       }
     }
@@ -138,6 +141,7 @@ function buildReviewableIndex(): ReviewableRef[] {
       slideId: slide.id,
       skillId,
       lessonTitle: `${getSkill(skillId)?.name ?? 'Practice'} · practice`,
+      difficulty: slide.difficulty ?? DEFAULT_DIFFICULTY,
     });
   }
   return out;

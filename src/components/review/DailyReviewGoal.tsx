@@ -10,6 +10,13 @@ import { formatDueDistance } from '../../lib/srs';
 import { Card } from '../ui/Card';
 import { Button } from '../ui/Button';
 
+/**
+ * A review session serves at most this many problems at once (mirrors
+ * SESSION_SIZE in ReviewSessionPage). Kept as a local copy-side constant so the
+ * UI can set honest expectations without reaching into another agent's file.
+ */
+const SESSION_SIZE = 15;
+
 type ReviewGoalStatus = 'pending' | 'complete' | 'idle';
 
 function reviewGoalStatus(
@@ -43,6 +50,10 @@ export function DailyReviewGoal({
   compact,
 }: DailyReviewGoalProps) {
   const status = reviewGoalStatus(dueCount, reviewsToday);
+  // A single session is capped at SESSION_SIZE, so when the queue is bigger we
+  // promise only what today's set actually covers.
+  const capped = dueCount > SESSION_SIZE;
+  const sessionCount = Math.min(dueCount, SESSION_SIZE);
 
   if (compact && status === 'idle') return null;
 
@@ -69,7 +80,9 @@ export function DailyReviewGoal({
                   Today’s review goal · {dueCount} due
                 </h3>
                 <p className="truncate text-sm text-muted">
-                  Clear them to keep your streak — reviews count on their own.
+                  {capped
+                    ? `Today’s set covers ${SESSION_SIZE} of ${dueCount} — reviews keep your streak on their own.`
+                    : 'Clear them to keep your streak — reviews count on their own.'}
                 </p>
               </div>
             </div>
@@ -87,13 +100,15 @@ export function DailyReviewGoal({
               </h2>
               <p className="mt-1 max-w-md text-sm text-white/70">
                 A short, interleaved set mixing different DP patterns. Recall each
-                one — no peeking at the lesson first. Clearing your queue keeps
-                your streak alive.
+                one — no peeking at the lesson first.{' '}
+                {capped
+                  ? `Today’s set covers ${SESSION_SIZE}; the rest stay queued for later. One session keeps your streak alive.`
+                  : 'Clearing your queue keeps your streak alive.'}
               </p>
             </div>
             <Link to="/review/session" className="shrink-0">
               <Button variant="secondary" size="lg" className="w-full sm:w-auto">
-                Start review
+                {capped ? `Start today’s set · ${sessionCount} of ${dueCount}` : 'Start review'}
                 <ArrowRight className="h-5 w-5" aria-hidden="true" />
               </Button>
             </Link>
@@ -127,12 +142,18 @@ export function DailyReviewGoal({
           </div>
         </div>
         {!compact && hasItems && (
-          <Link to="/review/session?mode=ahead">
-            <Button variant="secondary" size="lg">
-              <Sparkles className="h-4 w-4" aria-hidden="true" />
-              Practice ahead
-            </Button>
-          </Link>
+          <div className="flex flex-col items-start gap-1.5">
+            <Link to="/review/session?mode=ahead">
+              <Button variant="secondary" size="lg">
+                <Sparkles className="h-4 w-4" aria-hidden="true" />
+                Practice ahead
+              </Button>
+            </Link>
+            <p className="text-xs text-muted">
+              Optional — pull forward items that aren’t due yet for extra
+              practice. It won’t change your streak.
+            </p>
+          </div>
         )}
       </Card>
     );
@@ -159,12 +180,18 @@ export function DailyReviewGoal({
         </div>
       </div>
       {hasItems ? (
-        <Link to="/review/session?mode=ahead">
-          <Button variant="secondary" size="lg">
-            <Sparkles className="h-4 w-4" aria-hidden="true" />
-            Practice ahead
-          </Button>
-        </Link>
+        <div className="flex flex-col items-start gap-1.5">
+          <Link to="/review/session?mode=ahead">
+            <Button variant="secondary" size="lg">
+              <Sparkles className="h-4 w-4" aria-hidden="true" />
+              Practice ahead
+            </Button>
+          </Link>
+          <p className="text-xs text-muted">
+            Optional — pull forward items that aren’t due yet for extra practice.
+            It won’t change your streak.
+          </p>
+        </div>
       ) : (
         <Link to="/courses">
           <Button size="lg">

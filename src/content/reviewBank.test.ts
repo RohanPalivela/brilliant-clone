@@ -89,7 +89,7 @@ function correctAnswer(slide: Slide): SlideAnswer {
 
 describe('review bank content', () => {
   it('has a healthy number of standalone practice problems', () => {
-    expect(REVIEW_BANK.length).toBeGreaterThanOrEqual(35);
+    expect(REVIEW_BANK.length).toBeGreaterThanOrEqual(80);
   });
 
   it('gives every bank problem a unique slide id', () => {
@@ -113,7 +113,7 @@ describe('review bank content', () => {
     }
   });
 
-  it('covers all eight DP patterns', () => {
+  it('covers every review DP pattern (knapsack/2D excluded — not taught)', () => {
     const covered = new Set(REVIEWABLE_ITEMS.map((r) => r.skillId));
     for (const skill of REVIEW_SKILLS) {
       expect(covered.has(skill.id), `no items for skill ${skill.id}`).toBe(true);
@@ -126,6 +126,66 @@ describe('review bank content', () => {
     for (const ref of REVIEWABLE_ITEMS) {
       const slide = getReviewSlide(ref.courseId, ref.lessonId, ref.slideId);
       expect(slide, `unresolvable item ${ref.itemKey}`).toBeTruthy();
+    }
+  });
+
+  it('gives every bank slide a difficulty rating in 1..5', () => {
+    for (const slide of REVIEW_BANK) {
+      const d = slide.difficulty;
+      expect(d, `slide ${slide.id} is missing a difficulty`).toBeDefined();
+      expect(
+        Number.isInteger(d) && (d as number) >= 1 && (d as number) <= 5,
+        `slide ${slide.id} has out-of-range difficulty ${d}`,
+      ).toBe(true);
+    }
+  });
+
+  // Group bank slides by skill, preserving REVIEW_BANK encounter order — the
+  // same order a seeder reads them in.
+  const bankBySkill = (() => {
+    const groups = new Map<string, { id: string; difficulty: number }[]>();
+    for (const slide of REVIEW_BANK) {
+      const skillId = deriveSkillId(slide);
+      if (!skillId) continue;
+      const list = groups.get(skillId) ?? [];
+      list.push({ id: slide.id, difficulty: slide.difficulty ?? 3 });
+      groups.set(skillId, list);
+    }
+    return groups;
+  })();
+
+  it('gives every review skill a deep enough bank pool (>= 5 problems)', () => {
+    for (const skill of REVIEW_SKILLS) {
+      const pool = bankBySkill.get(skill.id) ?? [];
+      expect(
+        pool.length,
+        `skill ${skill.id} has only ${pool.length} bank problems`,
+      ).toBeGreaterThanOrEqual(5);
+    }
+  });
+
+  it('spans at least 2 difficulty levels within each skill', () => {
+    for (const skill of REVIEW_SKILLS) {
+      const pool = bankBySkill.get(skill.id) ?? [];
+      const diffs = pool.map((p) => p.difficulty);
+      const span = Math.max(...diffs) - Math.min(...diffs);
+      expect(
+        span,
+        `skill ${skill.id} difficulty range spans only ${span}`,
+      ).toBeGreaterThanOrEqual(2);
+    }
+  });
+
+  it('orders each skill bottom-up: difficulty is non-decreasing in array order', () => {
+    for (const skill of REVIEW_SKILLS) {
+      const pool = bankBySkill.get(skill.id) ?? [];
+      for (let i = 1; i < pool.length; i++) {
+        expect(
+          pool[i].difficulty,
+          `skill ${skill.id} is out of order at ${pool[i].id} ` +
+            `(${pool[i - 1].difficulty} then ${pool[i].difficulty})`,
+        ).toBeGreaterThanOrEqual(pool[i - 1].difficulty);
+      }
     }
   });
 });

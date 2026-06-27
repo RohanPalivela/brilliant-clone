@@ -1,9 +1,12 @@
 import { useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import confetti from 'canvas-confetti';
-import { Flame, Trophy, ArrowRight } from 'lucide-react';
+import { Flame, Trophy, ArrowRight, RotateCcw, CalendarClock } from 'lucide-react';
 import type { Course, Lesson } from '../../types/content';
 import { Button } from '../ui/Button';
 import { ProgressBar } from '../ui/ProgressBar';
+import { useReviewItems } from '../../hooks/useReviewItems';
+import { useAuth } from '../../hooks/useAuth';
 
 interface CongratsScreenProps {
   course: Course;
@@ -26,6 +29,14 @@ export function CongratsScreen({
   onNextLesson,
   onBackToCourse,
 }: CongratsScreenProps) {
+  const { dueCount } = useReviewItems();
+  const { profile } = useAuth();
+  const reviewsToday = profile?.reviewsCompletedToday ?? 0;
+  // Nudge learners who still have spaced-recall problems waiting today. Reviews
+  // count toward the streak on their own, so this is the moment to catch them
+  // before they close the app thinking a lesson alone was "enough" for the day.
+  const showReviewReminder = dueCount > 0;
+
   useEffect(() => {
     const reduce = window.matchMedia(
       '(prefers-reduced-motion: reduce)',
@@ -68,9 +79,69 @@ export function CongratsScreen({
           </p>
         </div>
 
+        {showReviewReminder ? (
+          <div className="mt-6 rounded-2xl border border-flame/30 bg-flame/5 p-5 text-left">
+            <div className="flex items-start gap-3">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-flame/15 text-flame">
+                <RotateCcw className="h-5 w-5" aria-hidden="true" />
+              </div>
+              <div className="min-w-0">
+                <h2 className="text-base font-bold text-ink">
+                  {dueCount} review problem{dueCount === 1 ? '' : 's'} still due today
+                </h2>
+                <p className="mt-0.5 text-sm text-muted">
+                  {reviewsToday > 0
+                    ? 'Finish your queue to lock in spaced recall before the day ends.'
+                    : 'A quick spaced-recall set keeps these patterns from fading — and counts toward your streak on its own.'}
+                </p>
+              </div>
+            </div>
+            <Link to="/review/session" className="mt-4 block">
+              <Button size="lg" className="w-full">
+                Review now
+                <ArrowRight className="h-4 w-4" aria-hidden="true" />
+              </Button>
+            </Link>
+          </div>
+        ) : (
+          // No problems are due *right now*, but every solved problem was just
+          // scheduled for spaced review (the first ones return tomorrow). Make
+          // that lesson→review contract explicit so a finished lesson never
+          // reads as "and that's the end of it."
+          <div className="mt-6 rounded-2xl border border-line bg-surface p-5 text-left">
+            <div className="flex items-start gap-3">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-brand-soft text-brand">
+                <CalendarClock className="h-5 w-5" aria-hidden="true" />
+              </div>
+              <div className="min-w-0">
+                <h2 className="text-base font-bold text-ink">
+                  Scheduled for spaced review
+                </h2>
+                <p className="mt-0.5 text-sm text-muted">
+                  The problems you solved are now scheduled to come back for
+                  spaced review — the first ones return tomorrow. Reviewing them
+                  is what makes this stick.
+                </p>
+                <Link
+                  to="/review"
+                  className="mt-2 inline-flex items-center gap-1 text-sm font-semibold text-brand hover:underline"
+                >
+                  Track pattern mastery
+                  <ArrowRight className="h-3.5 w-3.5" aria-hidden="true" />
+                </Link>
+              </div>
+            </div>
+          </div>
+        )}
+
         <div className="mt-8 flex flex-col gap-3">
           {nextLesson ? (
-            <Button size="lg" onClick={onNextLesson} className="w-full">
+            <Button
+              size="lg"
+              variant={showReviewReminder ? 'secondary' : 'primary'}
+              onClick={onNextLesson}
+              className="w-full"
+            >
               Next lesson
               <ArrowRight className="h-4 w-4" aria-hidden="true" />
             </Button>

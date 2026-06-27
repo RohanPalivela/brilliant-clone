@@ -1,9 +1,9 @@
 // Builders that turn small parameter objects into fully-formed, gradable review
 // Slides. Correctness is guaranteed by construction: for the "computed-answer"
-// patterns (reachability, paths, coins, knapsack) the validation re-derives the
-// truth from the same dp.ts engine the app trusts — so authoring a new problem
-// is just choosing good numbers and writing the prose, never hand-entering an
-// answer that could drift.
+// patterns (reachability, paths, coins) the validation re-derives the truth from
+// the same dp.ts engine the app trusts — so authoring a new problem is just
+// choosing good numbers and writing the prose, never hand-entering an answer
+// that could drift.
 
 import type { Slide } from '../types/content';
 
@@ -13,7 +13,14 @@ interface Prose {
   prompt: string;
   hint: string;
   explanation: string;
+  /** Authored difficulty rubric, 1 (trivial) → 5 (hard). Threaded onto the
+   *  built Slide so review pools can seed an ascending easy→hard ramp.
+   *  Missing defaults to 3 (see DEFAULT_DIFFICULTY). */
+  difficulty?: 1 | 2 | 3 | 4 | 5;
 }
+
+/** Sensible fallback when a problem omits an explicit difficulty. */
+const DEFAULT_DIFFICULTY = 3;
 
 export interface ReachabilityParams extends Prose {
   steps: number;
@@ -48,16 +55,12 @@ export interface MinChoiceParams extends Prose {
   amount: number;
 }
 
-export interface KnapsackParams extends Prose {
-  items: { id?: string; label: string; weight: number; value: number }[];
-  capacity: number;
-}
-
 export function buildReachability(p: ReachabilityParams): Slide {
   const component = p.variant === 'array' ? 'ArrayRow' : 'StairGrid';
   return {
     id: p.id,
     type: 'checkpoint',
+    difficulty: p.difficulty ?? DEFAULT_DIFFICULTY,
     component,
     props: {
       steps: p.steps,
@@ -76,6 +79,7 @@ export function buildPath(p: PathParams): Slide {
   return {
     id: p.id,
     type: 'checkpoint',
+    difficulty: p.difficulty ?? DEFAULT_DIFFICULTY,
     component: 'PathBuilder',
     props: {
       jumpSizes: p.jumpSizes,
@@ -93,6 +97,7 @@ export function buildLookback(p: LookbackParams): Slide {
   return {
     id: p.id,
     type: 'checkpoint',
+    difficulty: p.difficulty ?? DEFAULT_DIFFICULTY,
     component: 'PredecessorPicker',
     props: {
       steps: p.steps,
@@ -120,6 +125,7 @@ export function buildCoinSum(p: CoinSumParams): Slide {
   return {
     id: p.id,
     type: 'checkpoint',
+    difficulty: p.difficulty ?? DEFAULT_DIFFICULTY,
     component: 'CoinBuilder',
     props: {
       coins: p.coins,
@@ -143,27 +149,10 @@ export function buildMinChoice(p: MinChoiceParams): Slide {
   return {
     id: p.id,
     type: 'checkpoint',
+    difficulty: p.difficulty ?? DEFAULT_DIFFICULTY,
     component: 'MinChoicePicker',
     props: { coins: p.coins, amount: p.amount, prompt: p.prompt },
     validation: { type: 'minCoinChoice', coins: p.coins, amount: p.amount },
-    hint: p.hint,
-    explanationOnWrong: p.explanation,
-  };
-}
-
-export function buildKnapsack(p: KnapsackParams): Slide {
-  const items = p.items.map((it, i) => ({
-    id: it.id ?? `${p.id}-i${i}`,
-    label: it.label,
-    weight: it.weight,
-    value: it.value,
-  }));
-  return {
-    id: p.id,
-    type: 'checkpoint',
-    component: 'KnapsackPicker',
-    props: { items, capacity: p.capacity, prompt: p.prompt },
-    validation: { type: 'knapsack', capacity: p.capacity, items },
     hint: p.hint,
     explanationOnWrong: p.explanation,
   };

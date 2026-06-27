@@ -22,6 +22,7 @@ vi.mock('../../data/progressService', () => ({
 vi.mock('../../data/reviewService', () => ({
   enrollReviewItem: vi.fn().mockResolvedValue(undefined),
   enrollSkillBank: vi.fn().mockResolvedValue(undefined),
+  subscribeReviewItems: vi.fn(() => () => {}),
 }));
 
 vi.mock('../../lib/aiTutor/config', () => ({

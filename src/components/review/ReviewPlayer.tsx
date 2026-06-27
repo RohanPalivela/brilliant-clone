@@ -5,7 +5,7 @@ import type { SlideAnswer } from '../../types/content';
 import type { Grade, ReviewItem } from '../../types/review';
 import { defaultAnswer } from '../../lib/answers';
 import { validateAnswer } from '../../lib/validation';
-import { gradeOutcome } from '../../lib/srs';
+import { gradeOutcome, scheduleNext } from '../../lib/srs';
 import { applyReviewResult } from '../../data/reviewService';
 import { recordReviewCompleted } from '../../data/progressService';
 import { getReviewSlide, getReviewableRef, getSkill } from '../../content/skills';
@@ -51,6 +51,9 @@ export function ReviewPlayer({ queue, onDone, onExit }: ReviewPlayerProps) {
 
   const resultsRef = useRef<ReviewResult[]>([]);
   const requeued = useRef<Set<string>>(new Set());
+  // When the current slide was first shown — used to measure recall latency so
+  // a clean, fast recall can be graded `easy` (and to surface timing telemetry).
+  const shownAtRef = useRef<number>(Date.now());
 
   const item = items[pos];
   const slide = item
@@ -67,15 +70,24 @@ export function ReviewPlayer({ queue, onDone, onExit }: ReviewPlayerProps) {
     setHintOpen(false);
     setUsedHint(false);
     setWrongAttempts(0);
+    shownAtRef.current = Date.now();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pos]);
 
   const advance = useCallback(
     (outcome: { correct: boolean; usedHint: boolean; wrongAttempts: number }) => {
       if (!item) return;
-      const grade = gradeOutcome(outcome);
+      // Attach recall latency so the scheduler can reward fast, clean recall.
+      // `elapsedMs` is an optional field on ReviewOutcome; we build a plain
+      // object (not a literal passed inline) so this compiles regardless of
+      // whether the type already declares the field in the current merge state.
+      const elapsedMs = Date.now() - shownAtRef.current;
+      const fullOutcome = { ...outcome, elapsedMs };
+      const grade = gradeOutcome(fullOutcome);
       if (user) {
-        void applyReviewResult(user.uid, item, outcome);
+        // Fire-and-forget: keep the transition snappy, but don't crash silently
+        // if the write fails.
+        applyReviewResult(user.uid, item, fullOutcome).catch(() => {});
         // Reviews are real retrieval practice — each one counts toward the
         // daily review goal and keeps the streak alive.
         if (outcome.correct) void recordReviewCompleted(user.uid);
@@ -89,7 +101,21 @@ export function ReviewPlayer({ queue, onDone, onExit }: ReviewPlayerProps) {
       let queueLen = items.length;
       if (grade === 'again' && !requeued.current.has(item.itemKey)) {
         requeued.current.add(item.itemKey);
-        setItems((q) => [...q, item]);
+        // Requeue the POST-attempt state, not the stale pre-failure item. The
+        // second in-session attempt must grade from the post-lapse baseline
+        // (reps reset, interval short → growing) so a forgotten item resurfaces
+        // tomorrow instead of being pushed weeks out. scheduleNext is pure, so
+        // we derive the requeue copy locally without blocking the transition;
+        // the eventual Firestore write for the second attempt builds on this.
+        const next = scheduleNext(item, grade);
+        const requeuedItem: ReviewItem = {
+          ...item,
+          ...next,
+          lastResult: grade,
+          attempts: item.attempts + 1,
+          correctCount: item.correctCount + (outcome.correct ? 1 : 0),
+        };
+        setItems((q) => [...q, requeuedItem]);
         queueLen += 1;
       }
 
@@ -156,8 +182,11 @@ export function ReviewPlayer({ queue, onDone, onExit }: ReviewPlayerProps) {
           </button>
           <div className="flex min-w-0 flex-1 items-center gap-2">
             <RotateCcw className="h-4 w-4 shrink-0 text-brand" aria-hidden="true" />
+            {/* Keep the pattern identity hidden during the attempt — naming the
+                skill up front spoils the interleaving (the learner should first
+                ask "which pattern is this?"). Reveal it once they've checked. */}
             <span className="truncate text-sm font-semibold text-ink">
-              {skill?.name ?? 'Review'}
+              {checked ? skill?.name ?? 'Review' : 'Spaced recall'}
             </span>
           </div>
           <span className="text-xs font-medium tabular-nums text-muted">
@@ -165,12 +194,17 @@ export function ReviewPlayer({ queue, onDone, onExit }: ReviewPlayerProps) {
           </span>
         </div>
         <div className="mx-auto max-w-2xl px-4 pb-3">
-          <ProgressBar value={pos + 1} max={total} segments={Math.min(total, 16)} />
+          <ProgressBar
+            value={pos + 1}
+            max={total}
+            segments={Math.min(total, 16)}
+            label="Review session progress"
+          />
         </div>
       </header>
 
       <main className="mx-auto flex w-full max-w-2xl flex-1 flex-col justify-center overflow-hidden px-4 py-8">
-        {ref && (
+        {ref && checked && (
           <p className="mx-auto mb-4 text-center text-xs font-medium uppercase tracking-wide text-muted">
             Recall from · {ref.lessonTitle}
           </p>
@@ -216,7 +250,7 @@ export function ReviewPlayer({ queue, onDone, onExit }: ReviewPlayerProps) {
                 variant="ghost"
                 onClick={() => advance({ correct: false, usedHint, wrongAttempts })}
               >
-                Review again later
+                I'll try again tomorrow
               </Button>
             )}
             <div className="flex-1" />

@@ -68,7 +68,8 @@ export function HomePage() {
             {greeting()}, {name}
           </h1>
           <p className="mt-1 text-sm text-muted">
-            Complete a lesson or 3 problems to keep your streak alive.
+            Finish a lesson, solve 3 problems, or clear today’s review to keep
+            your streak alive.
           </p>
         </div>
         <div className="flex shrink-0 flex-col items-center rounded-2xl bg-flame/10 px-4 py-3 text-flame">

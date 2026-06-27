@@ -42,9 +42,22 @@ export function MasteryMap({ mastery }: MasteryMapProps) {
   }
 
   return (
-    <ul className="flex flex-col gap-3">
+    <div className="flex flex-col gap-3">
+      <p
+        className="text-xs text-muted"
+        title="Mastered ≈ you can go ~3 weeks without review before a pattern fades."
+      >
+        Strength climbs with each successful recall — Learning → Familiar →
+        Strong → Mastered — and decays as a pattern nears its next review.
+      </p>
+      <ul className="flex flex-col gap-3">
       {mastery.map((m) => {
         const pct = Math.round(m.strength * 100);
+        // A sibling agent adds `practiced` (items with reps > 0) to SkillMastery
+        // so freshly-seeded, never-attempted variants don't read as real
+        // progress. Fall back to `total` so this compiles regardless of merge
+        // order.
+        const practiced = m.practiced ?? m.total;
         return (
           <li
             key={m.skill.id}
@@ -80,13 +93,19 @@ export function MasteryMap({ mastery }: MasteryMapProps) {
                   style={{ width: `${pct}%` }}
                 />
               </div>
-              <span className="shrink-0 text-xs font-medium tabular-nums text-muted">
-                {m.due > 0 ? `${m.due} due` : `${m.total} item${m.total === 1 ? '' : 's'}`}
+              <span
+                className="shrink-0 text-xs font-medium tabular-nums text-muted"
+                title={`${practiced} of ${m.total} variant${m.total === 1 ? '' : 's'} practiced in this pattern`}
+              >
+                {m.due > 0
+                  ? `${m.due} due`
+                  : `${practiced} practiced / ${m.total} in pool`}
               </span>
             </div>
           </li>
         );
       })}
-    </ul>
+      </ul>
+    </div>
   );
 }

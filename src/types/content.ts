@@ -442,6 +442,9 @@ interface BaseSlide {
   type: SlideType;
   hint?: string;
   explanationOnWrong?: string;
+  /** Authored difficulty rubric, 1 (trivial) → 5 (hard). Used to seed review
+   *  pools in an ascending easy→hard ramp. Missing defaults to 3. */
+  difficulty?: number;
 }
 
 export type Slide =

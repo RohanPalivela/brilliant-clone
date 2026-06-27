@@ -3,8 +3,8 @@
 // Brilliant nails the testing effect but ignores the spacing effect: learners
 // feel fluent in-session, then forget. The Pattern Review Engine schedules each
 // learned problem to return at growing intervals and resurfaces missed ones
-// sooner, so the DP recurrence patterns (staircase -> coin change -> knapsack)
-// build durable, transferable memory instead of one-session understanding.
+// sooner, so the DP recurrence patterns (staircase -> coin change) build
+// durable, transferable memory instead of one-session understanding.
 
 /** How well the learner recalled an item — drives the next interval. */
 export type Grade = 'again' | 'hard' | 'good' | 'easy';
@@ -68,11 +68,13 @@ export type MasteryLevel = 'learning' | 'familiar' | 'strong' | 'mastered';
 /** Aggregated mastery for a single skill across all its enrolled items. */
 export interface SkillMastery {
   skill: ReviewSkill;
-  /** Items the learner has enrolled (solved at least once) in this skill. */
+  /** Items the learner has enrolled (seeded or practiced) in this skill. */
   total: number;
+  /** Items the learner has actually practiced (reps > 0) in this skill. */
+  practiced: number;
   /** How many of those items are due for review right now. */
   due: number;
-  /** Average memory strength across the skill's items, 0..1. */
+  /** Average memory strength across the skill's PRACTICED items, 0..1. */
   strength: number;
   level: MasteryLevel;
 }
@@ -82,4 +84,9 @@ export interface ReviewOutcome {
   correct: boolean;
   usedHint: boolean;
   wrongAttempts: number;
+  /**
+   * Wall-clock time the learner took to answer, in ms. Optional for
+   * back-compat: when present, a clean recall that is also fast grades `easy`.
+   */
+  elapsedMs?: number;
 }

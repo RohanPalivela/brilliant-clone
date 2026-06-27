@@ -10,13 +10,11 @@ import {
   buildLookback,
   buildCoinSum,
   buildMinChoice,
-  buildKnapsack,
 } from './reviewBuilders';
 import { reachabilityProblems } from './bank/reachability';
 import { pathProblems } from './bank/paths';
 import { lookbackProblems } from './bank/lookback';
 import { coinProblems, minChoiceProblems } from './bank/coins';
-import { knapsackProblems } from './bank/knapsack';
 import { conceptProblems } from './bank/concepts';
 
 /** Synthetic lesson id under which bank items are keyed for review storage. */
@@ -29,6 +27,5 @@ export const REVIEW_BANK: Slide[] = [
   ...lookbackProblems.map(buildLookback),
   ...coinProblems.map(buildCoinSum),
   ...minChoiceProblems.map(buildMinChoice),
-  ...knapsackProblems.map(buildKnapsack),
   ...conceptProblems,
 ];

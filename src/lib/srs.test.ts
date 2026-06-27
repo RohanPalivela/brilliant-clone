@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import {
   DAY_MS,
+  FAST_RECALL_MS,
   initialSchedule,
   scheduleNext,
   gradeOutcome,
@@ -74,6 +75,42 @@ describe('scheduleNext', () => {
     const good = scheduleNext({ ease: 2.4, intervalDays: 10, reps: 3, lapses: 0 }, 'good', NOW);
     expect(hard.intervalDays).toBeLessThan(good.intervalDays);
   });
+
+  // FIX #5: post-lapse recovery is faster than a brand-new card.
+  it('first good after a lapse recovers to the relearning interval, not 1 day', () => {
+    // Brand-new (lapses 0) first success → 1 day.
+    const fresh = scheduleNext({ ease: 2.4, intervalDays: 0, reps: 0, lapses: 0 }, 'good', NOW);
+    expect(fresh.intervalDays).toBe(1);
+    // Post-lapse (lapses > 0) first success → relearning interval (> 1).
+    const relearn = scheduleNext({ ease: 2.4, intervalDays: 1, reps: 0, lapses: 1 }, 'good', NOW);
+    expect(relearn.intervalDays).toBeGreaterThan(1);
+    expect(relearn.reps).toBe(1);
+  });
+
+  it('second good after a lapse resumes multiplicative growth', () => {
+    // A relearning card sitting at reps 1 (already recovered to 3d) climbs.
+    const climbed = scheduleNext({ ease: 2.0, intervalDays: 3, reps: 1, lapses: 1 }, 'good', NOW);
+    expect(climbed.intervalDays).toBe(Math.round(3 * 2.0));
+    expect(climbed.intervalDays).toBeGreaterThan(3);
+  });
+
+  it('a good/again learner recovers above 1 day instead of being pinned forever', () => {
+    let state = initialSchedule(NOW);
+    const intervalsAfterGood: number[] = [];
+    // Alternate good / again over several cycles.
+    for (let cycle = 0; cycle < 6; cycle++) {
+      state = { ...state, ...scheduleNext(state, 'good', NOW) };
+      intervalsAfterGood.push(state.intervalDays);
+      state = { ...state, ...scheduleNext(state, 'again', NOW) };
+    }
+    // The "good" rebound must rise above the 1-day floor (it would be pinned at
+    // 1 under the old logic where every again reset reps to 0 -> next good = 1).
+    expect(Math.max(...intervalsAfterGood)).toBeGreaterThan(1);
+    // Lapses keep accumulating — one per `again`.
+    expect(state.lapses).toBe(6);
+    // Ease decays toward, but never below, the 1.3 floor.
+    expect(state.ease).toBeGreaterThanOrEqual(1.3);
+  });
 });
 
 describe('gradeOutcome', () => {
@@ -81,15 +118,64 @@ describe('gradeOutcome', () => {
     expect(gradeOutcome({ correct: false, usedHint: false, wrongAttempts: 1 })).toBe('again');
     expect(gradeOutcome({ correct: true, usedHint: true, wrongAttempts: 0 })).toBe('hard');
     expect(gradeOutcome({ correct: true, usedHint: false, wrongAttempts: 2 })).toBe('hard');
+    // Clean recall with no timing signal stays `good` (back-compat).
     expect(gradeOutcome({ correct: true, usedHint: false, wrongAttempts: 0 })).toBe('good');
+  });
+
+  // FIX #4: the `easy` grade used to be unreachable. A clean recall that is
+  // also fast now grades `easy`; clean-but-slow (or untimed) stays `good`.
+  it('grades a clean + fast recall as easy', () => {
+    expect(
+      gradeOutcome({ correct: true, usedHint: false, wrongAttempts: 0, elapsedMs: FAST_RECALL_MS - 1 }),
+    ).toBe('easy');
+    // Boundary: exactly at the threshold still counts as fast.
+    expect(
+      gradeOutcome({ correct: true, usedHint: false, wrongAttempts: 0, elapsedMs: FAST_RECALL_MS }),
+    ).toBe('easy');
+  });
+
+  it('grades a clean but slow recall as good', () => {
+    expect(
+      gradeOutcome({ correct: true, usedHint: false, wrongAttempts: 0, elapsedMs: FAST_RECALL_MS + 1 }),
+    ).toBe('good');
+  });
+
+  it('grades a clean recall with no timing as good (back-compat)', () => {
+    expect(gradeOutcome({ correct: true, usedHint: false, wrongAttempts: 0 })).toBe('good');
+  });
+
+  it('treats a fast but hinted recall as hard, not easy', () => {
+    expect(
+      gradeOutcome({ correct: true, usedHint: true, wrongAttempts: 0, elapsedMs: 100 }),
+    ).toBe('hard');
   });
 });
 
 describe('mastery', () => {
-  it('strength scales with interval and caps at 1', () => {
-    expect(itemStrength({ intervalDays: 0, reps: 0 })).toBe(0);
-    expect(itemStrength({ intervalDays: 21, reps: 4 })).toBe(1);
-    expect(itemStrength({ intervalDays: 42, reps: 6 })).toBe(1);
+  // FIX #2: strength caps via the interval but now also decays with elapsed
+  // time. itemStrength takes `now` and reads lastReviewedAt.
+  it('strength scales with interval (capped) for a freshly-reviewed item', () => {
+    expect(itemStrength({ intervalDays: 0, reps: 0, lastReviewedAt: NOW }, NOW)).toBe(0);
+    // Reviewed just now → retrievability ≈ 1, so strength reflects the interval.
+    expect(itemStrength({ intervalDays: 21, reps: 4, lastReviewedAt: NOW }, NOW)).toBe(1);
+    expect(itemStrength({ intervalDays: 42, reps: 6, lastReviewedAt: NOW }, NOW)).toBe(1);
+  });
+
+  it('decays strength as an item becomes overdue', () => {
+    // Mastered item, reviewed just now → strength 1, level "mastered".
+    const fresh = itemStrength({ intervalDays: 21, reps: 4, lastReviewedAt: NOW }, NOW);
+    expect(fresh).toBe(1);
+    expect(levelFromStrength(fresh)).toBe('mastered');
+
+    // Same item, 100 days later → R = 21/100, strength clearly decayed and no
+    // longer "mastered".
+    const stale = itemStrength(
+      { intervalDays: 21, reps: 4, lastReviewedAt: NOW },
+      NOW + 100 * DAY_MS,
+    );
+    expect(stale).toBeCloseTo(21 / 100, 5);
+    expect(stale).toBeLessThan(0.5);
+    expect(levelFromStrength(stale)).not.toBe('mastered');
   });
 
   it('labels levels from strength', () => {
@@ -112,7 +198,60 @@ describe('mastery', () => {
     expect(summary).toHaveLength(1);
     expect(summary[0].skill.id).toBe('reachability-sweep');
     expect(summary[0].total).toBe(2);
+    expect(summary[0].practiced).toBe(2);
     expect(summary[0].due).toBe(1);
+  });
+
+  // FIX #3: averaging over PRACTICED items only — seeded reps=0 variants must
+  // not dilute a demonstrated skill.
+  it('averages strength over practiced items only, not seeded reps=0 variants', () => {
+    const skills: ReviewSkill[] = [
+      { id: 'reachability-sweep', name: 'R', blurb: '', order: 1 },
+    ];
+    const strong = item({
+      itemKey: 'strong',
+      skillId: 'reachability-sweep',
+      intervalDays: 21,
+      reps: 4,
+      lastReviewedAt: NOW,
+      dueAt: NOW + DAY_MS,
+    });
+    const seeded = Array.from({ length: 8 }, (_, i) =>
+      item({
+        itemKey: `seed-${i}`,
+        skillId: 'reachability-sweep',
+        intervalDays: 0,
+        reps: 0,
+        lastReviewedAt: NOW,
+        dueAt: NOW + i * DAY_MS,
+      }),
+    );
+    const summary = summarizeMastery([strong, ...seeded], skills, NOW);
+    expect(summary).toHaveLength(1);
+    expect(summary[0].total).toBe(9);
+    expect(summary[0].practiced).toBe(1);
+    // Strength reflects the one practiced item, NOT diluted by 8 zeros.
+    expect(summary[0].strength).toBeCloseTo(
+      itemStrength(strong, NOW),
+      5,
+    );
+    expect(summary[0].strength).toBe(1);
+    expect(summary[0].level).toBe('mastered');
+  });
+
+  it('reports strength 0 for a skill with no practiced items', () => {
+    const skills: ReviewSkill[] = [
+      { id: 'reachability-sweep', name: 'R', blurb: '', order: 1 },
+    ];
+    const seeded = [
+      item({ itemKey: 's1', skillId: 'reachability-sweep', intervalDays: 0, reps: 0 }),
+      item({ itemKey: 's2', skillId: 'reachability-sweep', intervalDays: 0, reps: 0 }),
+    ];
+    const summary = summarizeMastery(seeded, skills, NOW);
+    expect(summary[0].total).toBe(2);
+    expect(summary[0].practiced).toBe(0);
+    expect(summary[0].strength).toBe(0);
+    expect(summary[0].level).toBe('learning');
   });
 });
 

@@ -1,0 +1,9 @@
+{
+  "extends": "../tsconfig.app.json",
+  "compilerOptions": {
+    "composite": false,
+    "tsBuildInfoFile": null,
+    "noEmit": true
+  },
+  "include": ["candidate-problems.ts", "../src"]
+}

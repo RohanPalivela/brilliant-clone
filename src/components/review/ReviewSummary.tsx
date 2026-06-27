@@ -66,7 +66,7 @@ export function ReviewSummary({
 
         <div className="mt-8 grid grid-cols-3 gap-3 text-left">
           <Stat label="Reviewed" value={String(reviewed)} />
-          <Stat label="Recalled" value={`${accuracy}%`} />
+          <Stat label="Accuracy" value={`${accuracy}%`} sub={`${recalled}/${reviewed} recalled`} />
           <Stat label="Relearned" value={String(lapses)} />
         </div>
 
@@ -74,6 +74,16 @@ export function ReviewSummary({
           Each one you recalled is now scheduled to return later — at a longer
           gap if it was easy, sooner if you stumbled.
         </p>
+
+        {!goalComplete && (
+          // We only know whether *any* reviews remain due (goalComplete), not
+          // the exact count — that lives in a hook this screen isn't wired to —
+          // so the nudge stays truthful without inventing a number.
+          <p className="mt-3 text-sm font-medium text-flame">
+            You still have reviews due — come back later today, or they’ll wait
+            for you tomorrow.
+          </p>
+        )}
 
         <div className="mt-8 flex flex-col gap-3">
           <Button size="lg" onClick={onDoneToReview} className="w-full">
@@ -90,13 +100,26 @@ export function ReviewSummary({
   );
 }
 
-function Stat({ label, value }: { label: string; value: string }) {
+function Stat({
+  label,
+  value,
+  sub,
+}: {
+  label: string;
+  value: string;
+  sub?: string;
+}) {
   return (
     <div className="rounded-2xl border border-line bg-surface p-4 text-center shadow-[var(--shadow-card)]">
       <div className="text-2xl font-extrabold text-ink">{value}</div>
       <div className="mt-1 text-[11px] font-medium uppercase tracking-wide text-muted">
         {label}
       </div>
+      {sub && (
+        <div className="mt-0.5 text-[10px] font-medium tabular-nums text-muted">
+          {sub}
+        </div>
+      )}
     </div>
   );
 }
