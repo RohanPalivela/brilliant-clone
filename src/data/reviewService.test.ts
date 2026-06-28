@@ -12,10 +12,14 @@ vi.mock('firebase/firestore', () => ({
   writeBatch: vi.fn(),
 }));
 
-import { updateDoc } from 'firebase/firestore';
-import { applyReviewResult } from './reviewService';
-import { scheduleNext } from '../lib/srs';
+import { getDoc, updateDoc, writeBatch } from 'firebase/firestore';
+import { applyReviewResult, enrollSkillBank } from './reviewService';
+import { scheduleNext, DAY_MS } from '../lib/srs';
+import { REVIEWABLE_ITEMS } from '../content/skills';
+import { REVIEW_BANK_LESSON_ID } from '../content/reviewBank';
 import type { ReviewItem } from '../types/review';
+
+type Mock = ReturnType<typeof vi.fn>;
 
 function makeItem(overrides: Partial<ReviewItem> = {}): ReviewItem {
   return {
@@ -139,5 +143,71 @@ describe('applyReviewResult', () => {
     const secondWrite = (updateDoc as unknown as ReturnType<typeof vi.fn>).mock.calls[1][1];
     expect(secondWrite.reps).toBe(1);
     expect(secondWrite.intervalDays).toBe(expected.intervalDays);
+  });
+});
+
+describe('enrollSkillBank seeding', () => {
+  const SKILL = 'coin-change'; // a skill with a deep bank (>= 2 variants)
+
+  /** Capture every batch.set(ref, item) without touching Firestore. */
+  function captureSeed() {
+    const seeded: { itemKey: string; dueAt: number; createdAt: number }[] = [];
+    (writeBatch as unknown as Mock).mockReturnValue({
+      set: vi.fn((_ref: unknown, item: ReviewItem) =>
+        seeded.push({
+          itemKey: item.itemKey,
+          dueAt: item.dueAt,
+          createdAt: item.createdAt,
+        }),
+      ),
+      commit: vi.fn().mockResolvedValue(undefined),
+    });
+    return seeded;
+  }
+
+  it('seeds the whole bank in ascending difficulty order', async () => {
+    (getDoc as unknown as Mock).mockResolvedValue({ exists: () => false });
+    const seeded = captureSeed();
+
+    await enrollSkillBank('uid', SKILL);
+
+    const expectedOrder = REVIEWABLE_ITEMS.filter(
+      (r) => r.skillId === SKILL && r.lessonId === REVIEW_BANK_LESSON_ID,
+    )
+      .slice()
+      .sort((a, b) => a.difficulty - b.difficulty)
+      .map((r) => r.itemKey);
+
+    expect(expectedOrder.length).toBeGreaterThan(1);
+    expect(seeded.map((s) => s.itemKey)).toEqual(expectedOrder);
+  });
+
+  it('never makes a variant due on day 0, and fans them out one per day', async () => {
+    (getDoc as unknown as Mock).mockResolvedValue({ exists: () => false });
+    const seeded = captureSeed();
+
+    await enrollSkillBank('uid', SKILL);
+
+    // offsetDays = i + 1: the gentlest variant is due TOMORROW (not now), and
+    // each subsequent variant is exactly one more day out — this is what stops a
+    // multi-skill study session from spiking a single day's queue.
+    seeded.forEach((s, i) => {
+      expect(s.dueAt - s.createdAt).toBe((i + 1) * DAY_MS);
+    });
+    // Strictly increasing due dates → at most one new variant per day.
+    for (let i = 1; i < seeded.length; i++) {
+      expect(seeded[i].dueAt).toBeGreaterThan(seeded[i - 1].dueAt);
+    }
+  });
+
+  it('is idempotent: an already-seeded bank is not re-seeded', async () => {
+    (getDoc as unknown as Mock).mockResolvedValue({ exists: () => true });
+    const batch = { set: vi.fn(), commit: vi.fn().mockResolvedValue(undefined) };
+    (writeBatch as unknown as Mock).mockReturnValue(batch);
+
+    await enrollSkillBank('uid', SKILL);
+
+    expect(batch.set).not.toHaveBeenCalled();
+    expect(batch.commit).not.toHaveBeenCalled();
   });
 });
